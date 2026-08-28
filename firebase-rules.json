@@ -1,0 +1,31 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "allowed": {
+      ".read": "auth != null",
+      ".write": false
+    },
+
+    "data": {
+      ".read":  "auth != null && root.child('allowed').child(auth.uid).exists()",
+      ".write": "auth != null && root.child('allowed').child(auth.uid).exists()",
+
+      "medicine": {
+
+        "public": {
+          ".read": true
+        },
+
+        "inbox": {
+          "$ref": {
+            ".write": "!data.exists()",
+            ".validate": "$ref.matches(/^REQ-[0-9]{8}-[A-Z0-9]{4}$/) && newData.hasChildren(['ref','name','org','license','phone','email','startUse','items','createdAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 120 && newData.child('org').isString() && newData.child('org').val().length <= 200 && newData.child('license').isString() && newData.child('license').val().length <= 100 && newData.child('phone').isString() && newData.child('phone').val().length <= 40 && newData.child('email').isString() && newData.child('email').val().matches(/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/) && newData.child('email').val().length <= 120 && (!newData.hasChild('note') || newData.child('note').val().length <= 2000) && (!newData.hasChild('studyTitle') || newData.child('studyTitle').val().length <= 300) && (!newData.hasChild('addr') || newData.child('addr').val().length <= 300)"
+          }
+        }
+
+      }
+    }
+  }
+}

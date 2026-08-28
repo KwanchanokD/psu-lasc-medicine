@@ -351,6 +351,7 @@
 
 <nav class="tabs">
   <button data-tab="dash" class="active">🏠 แดชบอร์ด<span class="badge zero" id="badgeDash"></span></button>
+  <button data-tab="inbox">📥 คำขอเข้าใหม่<span class="badge zero" id="badgeInbox"></span></button>
   <button data-tab="form">📝 คำขอซื้อยา</button>
   <button data-tab="list">📋 ทะเบียนคำขอ</button>
   <button data-tab="drugs">💊 คลังยาและราคา<span class="badge zero" id="badgeDrug"></span></button>
@@ -380,6 +381,46 @@
       <span class="hint">ใกล้หมดอายุ / หมดอายุแล้ว / คงเหลือต่ำกว่าจุดสั่งซื้อ</span>
     </div>
     <div class="table-wrap"><table class="data" id="dashDrugs"></table></div>
+  </div>
+</section>
+
+<!-- ============================ คำขอเข้าใหม่จากนักวิจัย ============================ -->
+<section class="page" id="page-inbox">
+  <div class="card">
+    <div class="card-head">
+      <h2>ลิงก์แบบฟอร์มสำหรับนักวิจัย</h2>
+      <span class="hint">ส่งลิงก์นี้ให้นักวิจัยกรอกคำขอเอง — ไม่ต้องเข้าสู่ระบบ</span>
+    </div>
+    <div class="card-body">
+      <div class="grid grid-2" style="align-items:end">
+        <label class="field">ที่อยู่แบบฟอร์ม
+          <input id="pubLink" readonly>
+        </label>
+        <div class="btn-row">
+          <button class="btn sm" onclick="copyPubLink()">📋 คัดลอกลิงก์</button>
+          <button class="btn secondary sm" onclick="openPubLink()">↗ เปิดดูแบบฟอร์ม</button>
+          <button class="btn ghost sm" onclick="mailPubLink()">✉️ ส่งลิงก์ทางอีเมล</button>
+        </div>
+      </div>
+      <div class="alert info" style="margin:14px 0 0">
+        <b>วิธีใช้</b> — ส่งลิงก์นี้ให้นักวิจัยทางอีเมล หรือทำเป็น QR code ติดที่หน้าเรือนเลี้ยงสัตว์ทดลอง
+        เมื่อนักวิจัยกรอกและกดส่ง คำขอจะเข้ามารอในหน้านี้ พร้อมตัวเลขแจ้งเตือนบนแท็บ
+        <b>คำขอยังไม่เข้าทะเบียนจนกว่าท่านจะกด “รับเข้าระบบ”</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>คำขอที่รอตรวจสอบ</h2>
+      <div class="btn-row">
+        <button class="btn ghost sm" onclick="renderInbox()">🔄 รีเฟรช</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="inboxAlert"></div>
+      <div id="inboxList"></div>
+    </div>
   </div>
 </section>
 
@@ -871,7 +912,7 @@
    อ้างอิง SOP รหัส MED101 (ข้อปฏิบัติในการขอซื้อยาและเวชภัณฑ์เพื่อใช้ในงานวิจัย)
    เก็บข้อมูลในเครื่องด้วย localStorage — ไม่มีการส่งข้อมูลออกนอกเครื่อง
    ===================================================================== */
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const STORE_KEY = 'psu-lasc-medicine-v1';
 
 /* ---------------- ค่าตั้งต้น ---------------- */
@@ -2121,6 +2162,7 @@ function showTab(name) {
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('section.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
   if (name === 'dash') renderDash();
+  if (name === 'inbox') renderInbox();
   if (name === 'list') renderList();
   if (name === 'drugs') renderDrugs();
   if (name === 'sop') renderSop();
@@ -2131,7 +2173,7 @@ function initViews() {
   applySettingsHints();
   fillPicker(); fillDatalists();
   newRequest();
-  renderDrugs(); renderList(); renderDash(); renderSop(); fillSettingsForm();
+  renderDrugs(); renderList(); renderDash(); renderSop(); renderInbox(); fillSettingsForm();
   showTab('dash');
 }
 function init() {
@@ -2140,6 +2182,217 @@ function init() {
   document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
   initViews();
   initPWA();
+}
+
+/* =====================================================================
+   กล่องคำขอเข้าใหม่ — คำขอที่นักวิจัยกรอกเองผ่าน request.html
+   เก็บที่ data/medicine/inbox/{ref} · ต้องให้สัตวแพทย์ตรวจสอบและกด “รับเข้าระบบ”
+   ก่อนจึงจะออกเลขที่และเข้าทะเบียนตาม SOP
+   ===================================================================== */
+let inbox = {};            /* { ref: payload } จากคลาวด์ */
+
+function formUrl() { return APP_URL.replace(/\/?$/, '/') + 'request.html'; }
+function copyPubLink() {
+  const t = formUrl();
+  const done = () => toast('คัดลอกลิงก์แบบฟอร์มแล้ว — ส่งให้นักวิจัยได้เลย');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done));
+  else fallbackCopy(t, done);
+}
+function openPubLink() { window.open(formUrl(), '_blank'); }
+function mailPubLink() {
+  const s = db.settings;
+  const body = [
+    'เรียน นักวิจัยผู้ขอใช้บริการ',
+    '',
+    'ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์ ขอแจ้งช่องทางยื่นคำขอซื้อยาและเวชภัณฑ์เพื่อใช้ในงานวิจัย',
+    'ท่านสามารถกรอกแบบฟอร์มออนไลน์ได้ที่',
+    '',
+    formUrl(),
+    '',
+    'ข้อควรทราบตามมาตรฐานขั้นตอนการปฏิบัติงาน (SOP MED101)',
+    '1. โปรดยื่นคำขอก่อนวันเริ่มใช้ยาอย่างน้อย ' + s.leadDays + ' วัน',
+    '2. เมื่อได้รับใบแจ้งค่าใช้จ่ายทางอีเมลแล้ว โปรดชำระเงินภายใน ' + s.payDays + ' วัน หากเกินกำหนดต้องยื่นคำขอใหม่',
+    '3. ศูนย์ฯ จะดำเนินการจัดซื้อภายใน ' + s.buyDays + ' วันหลังได้รับชำระเงิน',
+    '4. เมื่อชำระเงินและดำเนินการซื้อยาแล้ว ไม่สามารถยกเลิกคำขอได้ในทุกกรณี',
+    '',
+    'ขอแสดงความนับถือ',
+    s.vetName,
+    'สัตวแพทย์ประจำ ' + s.orgTh
+  ].join('\n');
+  window.location.href = 'mailto:?subject=' +
+    encodeURIComponent('แบบฟอร์มยื่นคำขอซื้อยาและเวชภัณฑ์เพื่องานวิจัย — ศูนย์บริการสัตว์ทดลอง ม.อ.') +
+    '&body=' + encodeURIComponent(body);
+}
+
+function inboxList() {
+  return Object.keys(inbox).map(k => Object.assign({ ref: k }, inbox[k]))
+    .sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+}
+function renderInbox() {
+  const list = inboxList();
+  const n = list.length;
+  $('badgeInbox').textContent = n;
+  $('badgeInbox').classList.toggle('zero', n === 0);
+  $('pubLink').value = formUrl();
+
+  if (!cloudUser) {
+    $('inboxAlert').innerHTML = '<div class="alert warn">ต้อง <b>เข้าสู่ระบบ</b> ก่อนจึงจะเห็นคำขอที่นักวิจัยส่งเข้ามา ' +
+      'เพราะคำขอเหล่านี้เก็บอยู่บนคลาวด์ ไม่ได้อยู่ในเครื่อง</div>';
+    $('inboxList').innerHTML = '';
+    return;
+  }
+  $('inboxAlert').innerHTML = '';
+  if (!n) {
+    $('inboxList').innerHTML = '<div class="alert ok" style="margin:0">✅ ไม่มีคำขอค้างรอตรวจสอบ</div>';
+    return;
+  }
+  $('inboxList').innerHTML = list.map(r => {
+    const lead = r.startUse ? dayDiff(String(r.createdAt || '').slice(0,10), r.startUse) : null;
+    const lateTag = (lead != null && lead < num(db.settings.leadDays))
+      ? '<span class="chip expired">ล่วงหน้าเพียง ' + lead + ' วัน</span>' : '';
+    const items = (r.items || []).map((it, i) =>
+      '<tr><td class="ctr">' + (i+1) + '</td><td>' + esc(it.name) + '</td><td>' + esc(it.strength || '-') +
+      '</td><td class="num">' + esc(it.qty) + '</td><td>' + esc(it.unit || '-') + '</td><td>' + esc(it.note || '') + '</td></tr>').join('');
+    const dup = db.requests.some(x => x.fileRef === r.ref);
+    return '<div class="card" style="margin-bottom:14px">' +
+      '<div class="card-head">' +
+        '<h2>' + esc(r.ref) + ' · ' + esc(r.name) + '</h2>' +
+        '<span class="hint">ยื่นเมื่อ ' + esc(thaiDate(String(r.createdAt || '').slice(0,10))) + ' ' + lateTag +
+          (dup ? ' <span class="chip received">รับเข้าระบบแล้ว</span>' : '') + '</span>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="table-wrap"><table class="data">' +
+          '<tr><th style="width:190px">หน่วยงาน / คณะ</th><td>' + esc(r.org) + '</td></tr>' +
+          '<tr><th>เลขที่ใบอนุญาตใช้สัตว์ทดลอง</th><td>' + esc(r.license) + '</td></tr>' +
+          '<tr><th>ติดต่อ</th><td>' + esc(r.phone) + ' · ' + esc(r.email) + '</td></tr>' +
+          '<tr><th>ออกใบเสร็จในนาม</th><td>' + esc(r.bill || r.name) + (r.tax ? ' · เลขผู้เสียภาษี ' + esc(r.tax) : '') +
+            (r.addr ? '<br>' + esc(r.addr) : '') + '</td></tr>' +
+          '<tr><th>งานวิจัย</th><td>' + esc(r.studyNo || '-') + (r.studyTitle ? ' · ' + esc(r.studyTitle) : '') +
+            (r.animals ? '<br>สัตว์ทดลอง: ' + esc(r.animals) : '') + '</td></tr>' +
+          '<tr><th>วันที่เริ่มใช้ยา</th><td>' + esc(thaiDate(r.startUse)) + '</td></tr>' +
+          (r.att ? '<tr><th>เอกสารที่เตรียมไว้</th><td>' +
+            (r.att.license ? '☑' : '☐') + ' สำเนาใบอนุญาตใช้สัตว์ทดลอง &nbsp;&nbsp;' +
+            (r.att.id ? '☑' : '☐') + ' สำเนาบัตรประชาชน</td></tr>' : '') +
+          (r.note ? '<tr><th>หมายเหตุจากผู้ขอ</th><td>' + esc(r.note) + '</td></tr>' : '') +
+        '</table></div>' +
+        '<div class="sec-title" style="margin-top:14px">รายการยาที่ขอ</div>' +
+        '<div class="table-wrap"><table class="data"><thead><tr><th class="ctr" style="width:34px">ที่</th><th>ชื่อยา</th>' +
+          '<th>ความเข้มข้น</th><th class="num">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th></tr></thead><tbody>' +
+          items + '</tbody></table></div>' +
+        '<div class="btn-row" style="margin-top:14px">' +
+          '<button class="btn" onclick="acceptInbox(\'' + esc(r.ref) + '\')">✔ รับเข้าระบบ (ออกเลขที่คำขอ)</button>' +
+          '<button class="btn secondary sm" onclick="mailInbox(\'' + esc(r.ref) + '\')">✉️ ร่างอีเมลตอบรับผู้ยื่น</button>' +
+          '<button class="btn danger sm" onclick="rejectInbox(\'' + esc(r.ref) + '\')">✖ ตีกลับ / ลบ</button>' +
+        '</div>' +
+      '</div></div>';
+  }).join('');
+}
+/* รับคำขอจากนักวิจัยเข้าทะเบียน — สร้างคำขอจริงพร้อมออกเลขที่ตาม SOP */
+async function acceptInbox(ref) {
+  const r = inbox[ref];
+  if (!r) { toast('ไม่พบคำขอนี้แล้ว (อาจถูกดำเนินการจากอีกเครื่อง)'); return; }
+  if (db.requests.some(x => x.fileRef === ref) &&
+      !confirm('คำขออ้างอิง ' + ref + ' เคยถูกรับเข้าระบบไปแล้ว\nต้องการสร้างคำขอซ้ำอีกครั้งหรือไม่?')) return;
+
+  const q = blankRequest();
+  q.date = String(r.createdAt || '').slice(0, 10) || todayIso();
+  q.startUse = r.startUse || '';
+  q.req = {
+    name: r.name || '', org: r.org || '', tax: r.tax || '', license: r.license || '',
+    phone: r.phone || '', email: r.email || '', bill: r.bill || '', addr: r.addr || '', payer: ''
+  };
+  q.study = { no: r.studyNo || '', title: r.studyTitle || '' };
+  q.items = (r.items || []).map(it => ({
+    drugId: '', name: it.name || '', strength: it.strength || '', unit: it.unit || '',
+    qty: num(it.qty), price: 0, ctrl: guessCtrl(it.name), note: it.note || ''
+  }));
+  q.att = { license: !!(r.att && r.att.license), id: !!(r.att && r.att.id), ctrl: false };
+  q.fileRef = ref;
+  q.note = [r.animals ? 'สัตว์ทดลองที่ใช้: ' + r.animals : '', r.note || ''].filter(Boolean).join('\n');
+  q.status = 'submitted';
+  q.history = [{ t: thaiDate(todayIso()), what: 'รับคำขอจากแบบฟอร์มออนไลน์', note: 'รหัสอ้างอิงผู้ยื่น ' + ref }];
+
+  cur = q;
+  fillForm();
+  if (!await saveRequest(true)) return;
+  await removeInbox(ref, 'รับเข้าระบบเป็นคำขอเลขที่ ' + cur.no);
+  showTab('form');
+  toast('รับเข้าระบบแล้ว — ออกเลขที่ ' + cur.no + ' · ขั้นต่อไปคือใส่ราคาและแจ้งค่าใช้จ่าย');
+}
+/* เดาประเภทการควบคุมจากชื่อยา เทียบกับบัญชียาของหน่วยงาน */
+function guessCtrl(name) {
+  const n = String(name || '').toLowerCase();
+  if (!n) return 'ทั่วไป';
+  const hit = db.drugs.find(d => d.name && n.indexOf(String(d.name).toLowerCase().split(' ')[0]) >= 0);
+  return hit ? hit.ctrl : 'ทั่วไป';
+}
+async function rejectInbox(ref) {
+  const r = inbox[ref];
+  if (!r) return;
+  const why = prompt('เหตุผลที่ตีกลับคำขอ ' + ref + ' (บันทึกไว้เพื่อการตรวจสอบ):', '');
+  if (why === null) return;
+  if (!confirm('ลบคำขอ ' + ref + ' ออกจากกล่องคำขอเข้าใหม่?\n\nโปรดแจ้งผู้ขอทางอีเมลด้วย เพราะระบบไม่ได้ส่งอีเมลอัตโนมัติ')) return;
+  await removeInbox(ref, 'ตีกลับ: ' + (why.trim() || 'ไม่ระบุเหตุผล'));
+  toast('ตีกลับคำขอ ' + ref + ' แล้ว');
+}
+/* ย้ายออกจาก inbox ไปเก็บที่ processed เพื่อให้ตรวจสอบย้อนหลังได้ */
+async function removeInbox(ref, note) {
+  const r = inbox[ref];
+  delete inbox[ref];
+  renderInbox();
+  if (!cloudReady()) return;
+  try {
+    await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/processed/' + ref),
+      Object.assign({}, r, { processedAt: new Date().toISOString(), processedBy: cloudUser.email || '', result: note || '' }));
+    await fb.remove(fb.ref(fb.rtdb, CLOUD_ROOT + '/inbox/' + ref));
+  } catch (e) {
+    setCloudChip('err', '⚠ ย้ายคำขอออกจากกล่องไม่สำเร็จ — ลองใหม่อีกครั้ง');
+  }
+}
+/* ร่างอีเมลตอบรับผู้ยื่น — เปิดจากโปรแกรมอีเมลของผู้ใช้ จึงส่งจากที่อยู่ @psu.ac.th ของสัตวแพทย์เอง */
+function mailInbox(ref) {
+  const r = inbox[ref];
+  if (!r || !r.email) { toast('คำขอนี้ไม่มีอีเมลผู้ขอ'); return; }
+  const s = db.settings;
+  const list = (r.items || []).map((it, i) =>
+    '   ' + (i+1) + '. ' + it.name + (it.strength ? ' (' + it.strength + ')' : '') +
+    ' จำนวน ' + it.qty + ' ' + (it.unit || '')).join('\n');
+  const body = [
+    'เรียน ' + r.name,
+    '',
+    'ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์ ได้รับคำขอซื้อยาและเวชภัณฑ์เพื่อใช้ในงานวิจัยของท่านแล้ว',
+    '',
+    'รหัสอ้างอิง : ' + ref,
+    'วันที่ยื่น   : ' + thaiDate(String(r.createdAt || '').slice(0, 10)),
+    'วันที่เริ่มใช้ยา : ' + thaiDate(r.startUse),
+    '',
+    'รายการที่ขอ',
+    list,
+    '',
+    'ขณะนี้อยู่ระหว่างประสานสถานที่จำหน่ายเพื่อสอบถามราคา',
+    'ศูนย์ฯ จะแจ้งค่าใช้จ่ายกลับทางอีเมลฉบับนี้ และขอให้ท่านชำระเงินภายใน ' + s.payDays + ' วันนับจากวันที่ได้รับใบแจ้ง',
+    'หากเกินกำหนดจะต้องยื่นคำขอใหม่อีกครั้ง (SOP MED101 ข้อ 6.4)',
+    '',
+    'หากมีข้อสงสัยประการใด กรุณาติดต่อกลับตามที่อยู่อีเมลนี้',
+    '',
+    'ขอแสดงความนับถือ',
+    s.vetName,
+    'สัตวแพทย์ประจำ ' + s.orgTh
+  ].join('\n');
+  window.location.href = 'mailto:' + encodeURIComponent(r.email) +
+    '?subject=' + encodeURIComponent('ตอบรับคำขอซื้อยาและเวชภัณฑ์ รหัสอ้างอิง ' + ref + ' — ศูนย์บริการสัตว์ทดลอง ม.อ.') +
+    '&body=' + encodeURIComponent(body);
+}
+/* เผยแพร่ค่าพารามิเตอร์และรายชื่อยาให้แบบฟอร์มสาธารณะอ่านได้ (ไม่มีข้อมูลส่วนบุคคลและไม่มีราคา) */
+function publishPublicConfig() {
+  if (!cloudReady()) return;
+  const s = db.settings;
+  const payload = {
+    leadDays: num(s.leadDays), payDays: num(s.payDays), buyDays: num(s.buyDays),
+    drugs: db.drugs.map(d => d.name).filter(Boolean),
+    updatedAt: new Date().toISOString()
+  };
+  fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/public/config'), payload).catch(() => {});
 }
 
 /* =====================================================================
@@ -2234,6 +2487,7 @@ function cloudPushMaster() {
   masterPushTimer = setTimeout(async () => {
     try {
       await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/master'), masterPayload());
+      publishPublicConfig();
       setCloudChip('ok', '☁ ซิงก์แล้ว · ' + (cloudUser.email || ''));
     } catch (e) {
       setCloudChip('err', '⚠ บันทึกข้อมูลหลักขึ้นคลาวด์ไม่สำเร็จ — ข้อมูลยังอยู่ในเครื่อง');
@@ -2367,6 +2621,18 @@ window.onFirebaseReady = function (api) {
       fb.onValue(fb.ref(fb.rtdb, CLOUD_ROOT + '/master'), (s) => {
         if (s.exists()) applyCloudMaster(s.val());
       }, () => {});
+
+      // กล่องคำขอที่นักวิจัยกรอกเองผ่านแบบฟอร์มสาธารณะ
+      fb.onValue(fb.ref(fb.rtdb, CLOUD_ROOT + '/inbox'), (s) => {
+        const before = Object.keys(inbox).length;
+        inbox = s.exists() ? s.val() : {};
+        renderInbox();
+        const now = Object.keys(inbox).length;
+        if (firstSyncDone && now > before) toast('📥 มีคำขอใหม่จากนักวิจัย ' + (now - before) + ' รายการ');
+      }, () => { inbox = {}; renderInbox(); });
+
+      // เผยแพร่ค่าพารามิเตอร์ให้แบบฟอร์มสาธารณะใช้แสดงผลและตรวจสอบ
+      publishPublicConfig();
     } catch (e) {
       setCloudChip('err', '⚠ เชื่อมต่อคลาวด์ไม่สำเร็จ');
     }
@@ -2375,8 +2641,8 @@ window.onFirebaseReady = function (api) {
 function onCloudDenied() {
   setCloudChip('err', '⚠ บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าถึงข้อมูล');
   alert('บัญชีนี้เข้าสู่ระบบได้ แต่ยังไม่ได้รับสิทธิ์เข้าถึงข้อมูลคำขอซื้อยา\n\n' +
-        'กรุณาแจ้งผู้ดูแลระบบให้เพิ่ม User UID ของคุณไว้ใต้ allowed ในฐานข้อมูล ' +
-        'และตรวจว่ากฎความปลอดภัยครอบคลุมเส้นทาง data/medicine แล้ว');
+        'กรุณาแจ้งผู้ดูแลระบบให้เพิ่ม User UID ของคุณไว้ใต้ allowed ในฐานข้อมูล\n' +
+        '(กฎความปลอดภัยให้สิทธิ์ไว้ที่ระดับ data อยู่แล้ว จึงครอบคลุม data/medicine โดยอัตโนมัติ)');
 }
 
 /* ================= PWA ================= */

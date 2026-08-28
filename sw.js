@@ -1,10 +1,11 @@
 /* Service Worker — ระบบบริการยาและเวชภัณฑ์เพื่องานวิจัย PSU:LASC
    - HTML ดึงจากเครือข่ายเสมอ (bypass HTTP cache) เพื่อให้ได้เวอร์ชันล่าสุดทันทีที่อัปโหลดไฟล์ใหม่
    - ไฟล์อื่นใช้ network-first แล้ว fallback เป็น cache เมื่อออฟไลน์ */
-const CACHE = 'psu-lasc-med-v3';
+const CACHE = 'psu-lasc-med-v4';
 const ASSETS = [
   './',
   './index.html',
+  './request.html',        /* แบบฟอร์มยื่นคำขอสำหรับนักวิจัย */
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',

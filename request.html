@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ยื่นคำขอซื้อยาและเวชภัณฑ์เพื่องานวิจัย — ศูนย์บริการสัตว์ทดลอง ม.อ.</title>
+<meta name="theme-color" content="#0e7c66">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0e7c66; --primary-dark: #0a5f4e; --primary-light: #e5f4f0;
+    --accent: #1a5c9e; --danger: #c0392b; --warning: #b9770e;
+    --bg: #f4f6f9; --card: #fff; --text: #2c3e50; --muted: #7f8c8d;
+    --border: #dfe6ee; --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Sarabun','Leelawadee UI',Tahoma,sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+
+  header.app-header {
+    background: radial-gradient(900px 200px at 88% -40%, rgba(255,255,255,.20), transparent 70%),
+                linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff; padding: 16px 22px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15); border-bottom: 3px solid var(--accent);
+  }
+  header.app-header .logo {
+    background: #fff; border-radius: 50%; width: 58px; height: 58px; flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,.22); display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  header.app-header .logo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); }
+  header.app-header h1 { font-size: 17.5px; font-weight: 600; }
+  header.app-header p { font-size: 12.5px; opacity: .85; }
+
+  .container { max-width: 880px; margin: 0 auto; padding: 20px 16px 80px; }
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
+          box-shadow: 0 1px 4px rgba(0,0,0,.05); margin-bottom: 18px; overflow: hidden; }
+  .card-head { padding: 12px 18px; background: var(--primary-light); border-bottom: 1px solid var(--border); }
+  .card-head h2 { font-size: 15.5px; font-weight: 600; color: var(--primary-dark); }
+  .card-head .hint { font-size: 12.5px; color: var(--muted); font-weight: 400; }
+  .card-body { padding: 18px; }
+
+  .grid { display: grid; gap: 13px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  label.field { display: block; font-size: 13.5px; font-weight: 500; }
+  label.field span.req { color: var(--danger); }
+  label.field small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+  label.field input, label.field select, label.field textarea {
+    display: block; width: 100%; margin-top: 4px; padding: 9px 11px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: inherit; font-size: 15px; background: #fff; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  label.field input:focus, label.field select:focus, label.field textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,124,102,.12);
+  }
+  label.field input.bad, label.field select.bad { border-color: var(--danger); background: #fffafa; }
+  label.check { display: flex; align-items: flex-start; gap: 8px; font-size: 13.8px; font-weight: 500; }
+  label.check input { margin-top: 4px; flex: none; width: 17px; height: 17px; accent-color: var(--primary); }
+  textarea { resize: vertical; min-height: 62px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border: none;
+         border-radius: 8px; font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer;
+         background: var(--primary); color: #fff; text-decoration: none; transition: background .15s, transform .05s; }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+  .btn.secondary:hover { background: var(--primary-light); }
+  .btn.ghost { background: #fff; color: var(--muted); border: 1px solid var(--border); }
+  .btn.ghost:hover { background: #eef2f6; color: var(--text); }
+  .btn.sm { padding: 6px 12px; font-size: 13.5px; border-radius: 7px; }
+  .btn.big { padding: 13px 30px; font-size: 16.5px; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  table.items { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.items th, table.items td { border-bottom: 1px solid var(--border); padding: 7px 6px; text-align: left; }
+  table.items th { background: #f7f9fb; font-weight: 600; font-size: 12.8px; color: var(--primary-dark); white-space: nowrap; }
+  table.items input { width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px;
+                      font-family: inherit; font-size: 14px; }
+  table.items input.bad { border-color: var(--danger); background: #fffafa; }
+  table.items td.ctr { text-align: center; }
+  .table-wrap { overflow-x: auto; }
+
+  .alert { border-radius: 9px; padding: 11px 14px; font-size: 13.8px; margin-bottom: 12px; border: 1px solid; }
+  .alert.warn { background: #fdf3e2; border-color: #f0c987; color: #7a4f06; }
+  .alert.err  { background: #fdecea; border-color: #f5c6cb; color: #9c0006; }
+  .alert.info { background: #e8f1fa; border-color: #b9d4ee; color: #124a82; }
+  .alert.ok   { background: #e2efda; border-color: #a9d08e; color: #376e2a; }
+  .alert ul { margin: 5px 0 0 18px; }
+
+  .sec-title { font-size: 14.5px; font-weight: 600; color: var(--primary-dark);
+               border-left: 4px solid var(--primary); padding-left: 9px; margin: 20px 0 10px; }
+  .sec-title:first-child { margin-top: 0; }
+  ul.plain { padding-left: 20px; } ul.plain li { margin-bottom: 5px; }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+
+  .refbox { text-align: center; padding: 26px 20px; }
+  .refbox .tick { font-size: 46px; line-height: 1; }
+  .refbox .code { font-size: 27px; font-weight: 700; color: var(--primary-dark);
+                  letter-spacing: 1.5px; margin: 10px 0; font-family: 'Sarabun', monospace; }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps li { counter-increment: s; position: relative; padding-left: 34px; margin-bottom: 9px; font-size: 13.8px; }
+  .steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 1px;
+    width: 23px; height: 23px; border-radius: 50%; background: var(--primary-light);
+    color: var(--primary-dark); font-weight: 700; font-size: 13px; text-align: center; line-height: 23px;
+  }
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+           background: #2c3e50; color: #fff; padding: 11px 22px; border-radius: 999px; font-size: 14px;
+           box-shadow: 0 4px 16px rgba(0,0,0,.25); z-index: 200; opacity: 0; pointer-events: none;
+           transition: opacity .2s, bottom .2s; }
+  .toast.show { opacity: 1; bottom: 36px; }
+  footer.pg { text-align: center; color: var(--muted); font-size: 12.5px; padding: 10px 16px 30px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo"><img src="logo-medicine.png" alt="PSU:LASC Medicine Service"></div>
+  <div>
+    <h1>ยื่นคำขอซื้อยาและเวชภัณฑ์เพื่องานวิจัย</h1>
+    <p>ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์ · ตาม SOP MED101</p>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ===================== ฟอร์ม ===================== -->
+<div id="formWrap">
+
+  <div class="card">
+    <div class="card-body">
+      <div class="alert info" style="margin-bottom:0">
+        <b>ก่อนกรอกแบบฟอร์ม โปรดอ่าน</b>
+        <ul class="plain" style="margin-top:6px">
+          <li>ยื่นคำขอ<b>ก่อนวันเริ่มใช้ยาอย่างน้อย <span id="leadLabel">30</span> วัน</b> (SOP 6.1)</li>
+          <li>สัตวแพทย์จะติดต่อประสานสถานที่จำหน่าย แล้ว<b>แจ้งค่าใช้จ่ายกลับทางอีเมล</b> ที่ท่านระบุ</li>
+          <li>เมื่อได้รับใบแจ้งค่าใช้จ่ายแล้ว <b>ชำระเงินภายใน <span id="payLabel">7</span> วัน</b> หากเกินกำหนดต้องยื่นคำขอใหม่ (SOP 6.4)</li>
+          <li><b>เมื่อชำระเงินและสัตวแพทย์ดำเนินการซื้อยาแล้ว ไม่สามารถยกเลิกได้ในทุกกรณี</b> (SOP 6.5)</li>
+          <li>ใบเสร็จ/ใบกำกับภาษีออกโดยสถานที่จำหน่าย โปรดระบุชื่อ ที่อยู่ และเลขประจำตัวผู้เสียภาษีให้ถูกต้อง (SOP 6.6)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="alerts"></div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>1. ข้อมูลผู้ขอใช้บริการ</h2>
+      <span class="hint">ช่องที่มีเครื่องหมาย <span style="color:var(--danger)">*</span> ต้องกรอกให้ครบ</span>
+    </div>
+    <div class="card-body">
+      <div class="grid grid-3">
+        <label class="field">นักวิจัยผู้สั่งซื้อยา <span class="req">*</span>
+          <input id="fName" placeholder="ชื่อ-นามสกุล" autocomplete="name">
+        </label>
+        <label class="field">หน่วยงาน / คณะ / ภาควิชา <span class="req">*</span>
+          <input id="fOrg" placeholder="เช่น คณะวิทยาศาสตร์ ภาควิชาชีววิทยา">
+        </label>
+        <label class="field">เลขที่ใบอนุญาตใช้สัตว์ทดลอง <span class="req">*</span>
+          <small>ตามที่ได้รับอนุมัติจากคณะกรรมการฯ</small>
+          <input id="fLicense" placeholder="เช่น 2569-SCI06-013">
+        </label>
+        <label class="field">เบอร์โทรที่ติดต่อได้ <span class="req">*</span>
+          <input id="fPhone" placeholder="0X-XXX-XXXX" inputmode="tel" autocomplete="tel">
+        </label>
+        <label class="field">E-mail <span class="req">*</span>
+          <small>ช่องทางที่สัตวแพทย์จะแจ้งค่าใช้จ่ายกลับ</small>
+          <input type="email" id="fEmail" placeholder="name@psu.ac.th" autocomplete="email">
+        </label>
+        <label class="field">เลขประจำตัวผู้เสียภาษี
+          <small>สำหรับออกใบเสร็จ/ใบกำกับภาษี</small>
+          <input id="fTax" placeholder="13 หลัก" inputmode="numeric">
+        </label>
+        <label class="field">ชื่อในการออกบิล/ใบเสร็จ
+          <small>เว้นว่างได้ ถ้าออกในนามตนเอง</small>
+          <input id="fBill" placeholder="ออกใบเสร็จในนาม">
+        </label>
+        <label class="field" style="grid-column:span 2">ที่อยู่สำหรับออกใบเสร็จ
+          <input id="fAddr" placeholder="ที่อยู่ตามที่ต้องการให้ระบุในใบเสร็จ">
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>2. ข้อมูลงานวิจัย</h2></div>
+    <div class="card-body">
+      <div class="grid grid-3">
+        <label class="field">เลขที่งานวิจัย
+          <input id="fStudyNo" placeholder="Study No. / เลขที่โครงการ">
+        </label>
+        <label class="field" style="grid-column:span 2">ชื่องานวิจัย
+          <input id="fStudyTitle" placeholder="ชื่อโครงการวิจัย">
+        </label>
+        <label class="field">วันที่เริ่มใช้ยา <span class="req">*</span>
+          <small>ยื่นล่วงหน้าอย่างน้อย <span id="leadLabel2">30</span> วัน</small>
+          <input type="date" id="fStartUse">
+        </label>
+        <label class="field" style="grid-column:span 2">จำนวนและชนิดสัตว์ทดลองที่ใช้
+          <small>เว้นว่างได้ — ช่วยให้สัตวแพทย์ประเมินปริมาณยาได้แม่นขึ้น</small>
+          <input id="fAnimals" placeholder="เช่น หนูแรท Wistar 24 ตัว">
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>3. ชนิดยาและจำนวนที่ต้องการ</h2>
+      <span class="hint">ระบุความเข้มข้นและหน่วยให้ชัดเจน เพื่อให้สั่งซื้อได้ถูกต้อง</span>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap"><table class="items" id="itemTable"></table></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn secondary sm" onclick="addRow()">➕ เพิ่มรายการ</button>
+        <span class="muted" style="font-size:12.8px">ถ้าไม่ทราบชื่อทางการค้า ระบุชื่อสามัญทางยาหรือรายละเอียดที่ทราบได้</span>
+      </div>
+      <datalist id="drugList"></datalist>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>4. ข้อควรทราบเพิ่มเติม</h2>
+    </div>
+    <div class="card-body">
+      <div class="alert warn" style="margin:0">
+        หากรายการที่ขอมี<b>ยาควบคุมพิเศษ วัตถุออกฤทธิ์ต่อจิตและประสาท หรือยาเสพติดให้โทษ</b>
+        (เช่น Thiopental, Zoletil, Tramadol, Diazepam, Isoflurane, Xylazine, Dexmedetomidine)
+        จะต้องยื่นแบบคำขอตามกฎหมายเพิ่มเติม — สัตวแพทย์จะแจ้งรายละเอียดกลับทางอีเมล
+      </div>
+      <label class="field" style="margin-top:14px">หมายเหตุถึงสัตวแพทย์
+        <textarea id="fNote" placeholder="ข้อมูลเพิ่มเติม เช่น ความเร่งด่วน ยี่ห้อที่เคยใช้ หรือข้อจำกัดของการทดลอง"></textarea>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <label class="check" style="font-size:14px">
+        <input type="checkbox" id="fConsent">
+        <span>ข้าพเจ้ารับทราบข้อปฏิบัติตาม SOP MED101 ข้างต้น และยืนยันว่าข้อมูลที่กรอกถูกต้องครบถ้วน
+        โดยยินยอมให้ศูนย์บริการสัตว์ทดลองใช้ข้อมูลนี้เพื่อดำเนินการจัดซื้อยาและเวชภัณฑ์ตามคำขอ</span>
+      </label>
+      <div class="btn-row" style="margin-top:18px">
+        <button class="btn big" id="submitBtn" onclick="submitForm()">📨 ส่งคำขอ</button>
+        <span class="muted" id="netHint" style="font-size:13px"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== หน้าสำเร็จ ===================== -->
+<div id="doneWrap" class="hidden">
+  <div class="card">
+    <div class="card-body refbox">
+      <div class="tick">✅</div>
+      <h2 style="color:var(--primary-dark);font-size:20px;margin-top:6px">ส่งคำขอเรียบร้อยแล้ว</h2>
+      <p class="muted" style="font-size:14px">กรุณาบันทึกรหัสอ้างอิงนี้ไว้สำหรับติดตามเรื่อง</p>
+      <div class="code" id="refCode">—</div>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn secondary sm" onclick="copyRef()">📋 คัดลอกรหัส</button>
+        <button class="btn ghost sm" onclick="printSummary()">🖨️ พิมพ์/บันทึกสำเนา</button>
+        <button class="btn ghost sm" onclick="location.reload()">➕ ยื่นคำขอใหม่</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>ขั้นตอนต่อไป</h2></div>
+    <div class="card-body">
+      <ol class="steps">
+        <li><b>สัตวแพทย์ตรวจสอบคำขอ</b> และประสานสถานที่จำหน่ายเพื่อสอบถามราคา</li>
+        <li><b>ท่านจะได้รับใบแจ้งค่าใช้จ่ายทางอีเมล</b> ที่ <b id="doneEmail"></b></li>
+        <li><b>ชำระเงินภายใน <span id="payLabel2">7</span> วัน</b> นับจากวันที่ได้รับใบแจ้ง — หากเกินกำหนดต้องยื่นคำขอใหม่</li>
+        <li><b>สัตวแพทย์จัดซื้อภายใน <span id="buyLabel">7</span> วัน</b> หลังได้รับชำระเงิน</li>
+        <li><b>มารับยาที่เรือนเลี้ยงสัตว์ทดลอง</b> ตรวจสอบชนิด ความเข้มข้น และจำนวนให้ถูกต้อง แล้วลงชื่อรับในแบบบันทึกการรับยา</li>
+      </ol>
+      <div class="alert warn" style="margin:14px 0 0">
+        <b>ข้อควรทราบ</b> — คำขอนี้ยังไม่ถือว่าได้รับการอนุมัติ จนกว่าสัตวแพทย์จะตรวจสอบและแจ้งค่าใช้จ่ายกลับ
+        หากข้อมูลไม่ครบถ้วน สัตวแพทย์จะติดต่อกลับตามเบอร์โทรหรืออีเมลที่ท่านให้ไว้
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<footer class="pg">
+  ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์ · Laboratory Animals Service Center, PSU<br>
+  แบบฟอร์มนี้เป็นส่วนหนึ่งของระบบบริการยาและเวชภัณฑ์ ตามมาตรฐานขั้นตอนการปฏิบัติงาน SOP MED101
+</footer>
+
+<div id="printArea" style="display:none"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   แบบฟอร์มยื่นคำขอซื้อยาและเวชภัณฑ์ (สำหรับนักวิจัย — ไม่ต้องเข้าสู่ระบบ)
+   เขียนข้อมูลลง Firebase ที่ data/medicine/inbox/{id} เท่านั้น
+   อ่านค่าพารามิเตอร์ตาม SOP และรายชื่อยาจาก data/medicine/public/config
+   สัตวแพทย์จะเห็นคำขอในแท็บ “คำขอเข้าใหม่” ของระบบหลักเพื่อตรวจสอบก่อนรับเข้าทะเบียน
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAdC4jcKj8GBEWR1lOFDZQA_Y90M4FXNt8",
+  authDomain: "psu-lasc-animal.firebaseapp.com",
+  databaseURL: "https://psu-lasc-animal-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "psu-lasc-animal",
+  storageBucket: "psu-lasc-animal.firebasestorage.app",
+  messagingSenderId: "726169505667",
+  appId: "1:726169505667:web:a5f7401be7ed1e809f30b6"
+};
+const DB_URL  = FIREBASE_CONFIG.databaseURL.replace(/\/$/, '');
+const INBOX   = DB_URL + '/data/medicine/inbox';
+const CONFIG  = DB_URL + '/data/medicine/public/config.json';
+
+/* Webhook สำหรับส่งอีเมลแจ้งเตือนอัตโนมัติ (n8n / Power Automate / บริการอื่น)
+   ปล่อยว่างไว้ = ไม่ส่ง ระบบยังทำงานได้ครบตามปกติ
+   เมื่อตั้ง n8n เสร็จแล้ว ให้วาง Production URL ของ Webhook node ตรงนี้
+   ตัวอย่าง: 'https://n8n.example.psu.ac.th/webhook/lasc-medicine-request'
+   หมายเหตุ: การส่ง webhook เป็นแบบ "ส่งแล้วไม่รอผล" หากปลายทางล่ม คำขอยังถูกบันทึกลง Firebase ตามปกติ */
+const WEBHOOK_URL = '';   /* ← วาง Production URL ของ n8n Webhook ตรงนี้ (ดู n8n-setup.md) */
+
+/* ค่าตั้งต้น ใช้เมื่ออ่านค่าจากคลาวด์ไม่ได้ */
+let cfg = { leadDays: 30, payDays: 7, buyDays: 7, drugs: [] };
+let items = [];
+let submitting = false;
+
+const $ = (id) => document.getElementById(id);
+const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function num(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+function todayIso() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function thaiDate(iso) {
+  if (!iso) return '-';
+  const p = String(iso).split('-'); if (p.length !== 3) return iso;
+  const d = new Date(+p[0], +p[1]-1, +p[2]);
+  if (isNaN(d.getTime())) return iso;
+  return d.getDate() + ' ' + TH_MONTHS[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+}
+function dayDiff(a, b) {
+  if (!a || !b) return 0;
+  const pa = String(a).split('-'), pb = String(b).split('-');
+  const da = new Date(+pa[0], +pa[1]-1, +pa[2]), dbb = new Date(+pb[0], +pb[1]-1, +pb[2]);
+  if (isNaN(da.getTime()) || isNaN(dbb.getTime())) return 0;
+  return Math.round((dbb - da) / 86400000);
+}
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ---------- รายการยา ---------- */
+function addRow() {
+  items.push({ name:'', strength:'', qty:'', unit:'', note:'' });
+  renderItems();
+}
+function delRow(i) {
+  items.splice(i, 1);
+  if (!items.length) items.push({ name:'', strength:'', qty:'', unit:'', note:'' });
+  renderItems();
+}
+function updItem(i, field, val) { items[i][field] = val; }
+function renderItems() {
+  const head = '<thead><tr>' +
+    '<th style="width:30px">ที่</th>' +
+    '<th style="min-width:180px">ชื่อยา / เวชภัณฑ์ <span style="color:var(--danger)">*</span></th>' +
+    '<th style="min-width:120px">ความเข้มข้น / ขนาดบรรจุ</th>' +
+    '<th style="width:90px">จำนวน <span style="color:var(--danger)">*</span></th>' +
+    '<th style="width:96px">หน่วย</th>' +
+    '<th style="min-width:130px">หมายเหตุ</th>' +
+    '<th style="width:44px"></th></tr></thead>';
+  const body = items.map((it, i) =>
+    '<tr>' +
+    '<td class="ctr">' + (i+1) + '</td>' +
+    '<td><input list="drugList" value="' + esc(it.name) + '" placeholder="เช่น Isoflurane" oninput="updItem(' + i + ',\'name\',this.value)"></td>' +
+    '<td><input value="' + esc(it.strength) + '" placeholder="เช่น 250 mL" oninput="updItem(' + i + ',\'strength\',this.value)"></td>' +
+    '<td><input value="' + esc(it.qty) + '" placeholder="เช่น 2" inputmode="decimal" oninput="updItem(' + i + ',\'qty\',this.value)"></td>' +
+    '<td><input value="' + esc(it.unit) + '" placeholder="ขวด / mL" oninput="updItem(' + i + ',\'unit\',this.value)"></td>' +
+    '<td><input value="' + esc(it.note) + '" oninput="updItem(' + i + ',\'note\',this.value)"></td>' +
+    '<td class="ctr">' + (items.length > 1 ? '<button class="btn ghost sm" onclick="delRow(' + i + ')" title="ลบรายการนี้">🗑️</button>' : '') + '</td>' +
+    '</tr>').join('');
+  $('itemTable').innerHTML = head + '<tbody>' + body + '</tbody>';
+}
+
+/* ---------- ตรวจความครบถ้วน ---------- */
+function clearBad() {
+  document.querySelectorAll('.bad').forEach(el => el.classList.remove('bad'));
+}
+function markBad(id) { const el = $(id); if (el) el.classList.add('bad'); }
+function validate() {
+  clearBad();
+  const errs = [];
+  const need = [
+    ['fName', 'ชื่อนักวิจัยผู้สั่งซื้อยา'],
+    ['fOrg', 'หน่วยงาน / คณะ / ภาควิชา'],
+    ['fLicense', 'เลขที่ใบอนุญาตใช้สัตว์ทดลอง'],
+    ['fPhone', 'เบอร์โทรที่ติดต่อได้'],
+    ['fEmail', 'E-mail'],
+    ['fStartUse', 'วันที่เริ่มใช้ยา']
+  ];
+  need.forEach(([id, label]) => {
+    if (!$(id).value.trim()) { errs.push('กรอก' + label); markBad(id); }
+  });
+  const email = $('fEmail').value.trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errs.push('รูปแบบ E-mail ไม่ถูกต้อง'); markBad('fEmail'); }
+
+  const good = items.filter(it => it.name.trim());
+  if (!good.length) errs.push('ระบุรายการยาอย่างน้อย 1 รายการ');
+  else if (good.some(it => !String(it.qty).trim())) errs.push('ระบุจำนวนของทุกรายการยา');
+
+  const start = $('fStartUse').value;
+  if (start && dayDiff(todayIso(), start) < 0) { errs.push('วันที่เริ่มใช้ยาต้องไม่เป็นวันที่ผ่านมาแล้ว'); markBad('fStartUse'); }
+
+  if (!$('fConsent').checked) errs.push('ติ๊กยืนยันการรับทราบข้อปฏิบัติตาม SOP');
+  return errs;
+}
+function renderAlerts(list) {
+  $('alerts').innerHTML = list.map(a => '<div class="alert ' + a.t + '">' + a.h + '</div>').join('');
+  if (list.length) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function checkLead() {
+  const start = $('fStartUse').value;
+  if (!start) { $('alerts').innerHTML = ''; return; }
+  const lead = dayDiff(todayIso(), start);
+  if (lead >= 0 && lead < cfg.leadDays) {
+    renderAlerts([{ t:'warn', h:'ท่านยื่นคำขอล่วงหน้าเพียง <b>' + lead + ' วัน</b> ซึ่งน้อยกว่าที่ SOP 6.1 กำหนด (' +
+      cfg.leadDays + ' วัน) — ยังส่งคำขอได้ แต่<b>อาจได้รับยาไม่ทันวันเริ่มการทดลอง</b> ' +
+      'โปรดระบุเหตุผลหรือความเร่งด่วนไว้ในช่องหมายเหตุถึงสัตวแพทย์' }]);
+  } else {
+    $('alerts').innerHTML = '';
+  }
+}
+
+/* ---------- รหัสอ้างอิง ---------- */
+function makeRef() {
+  const d = new Date();
+  const ymd = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  let rnd = '';
+  const pool = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';   /* ตัดอักขระที่อ่านสับสน 0/O 1/I */
+  const buf = new Uint32Array(4);
+  (window.crypto || window.msCrypto).getRandomValues(buf);
+  for (let i = 0; i < 4; i++) rnd += pool[buf[i] % pool.length];
+  return 'REQ-' + ymd + '-' + rnd;
+}
+
+/* ---------- ส่งคำขอ ---------- */
+function collect(ref) {
+  return {
+    ref: ref,
+    createdAt: new Date().toISOString(),
+    name: $('fName').value.trim(),
+    org: $('fOrg').value.trim(),
+    tax: $('fTax').value.trim(),
+    license: $('fLicense').value.trim(),
+    phone: $('fPhone').value.trim(),
+    email: $('fEmail').value.trim(),
+    bill: $('fBill').value.trim(),
+    addr: $('fAddr').value.trim(),
+    studyNo: $('fStudyNo').value.trim(),
+    studyTitle: $('fStudyTitle').value.trim(),
+    animals: $('fAnimals').value.trim(),
+    startUse: $('fStartUse').value,
+    items: items.filter(it => it.name.trim()).map(it => ({
+      name: it.name.trim(), strength: it.strength.trim(),
+      qty: String(it.qty).trim(), unit: it.unit.trim(), note: it.note.trim()
+    })),
+    note: $('fNote').value.trim(),
+    status: 'new'
+  };
+}
+async function submitForm() {
+  if (submitting) return;
+  const errs = validate();
+  if (errs.length) {
+    renderAlerts([{ t:'err', h:'<b>ยังกรอกข้อมูลไม่ครบ</b><ul>' + errs.map(e => '<li>' + esc(e) + '</li>').join('') + '</ul>' }]);
+    return;
+  }
+  const lead = dayDiff(todayIso(), $('fStartUse').value);
+  if (lead < cfg.leadDays &&
+      !confirm('ท่านยื่นคำขอล่วงหน้าเพียง ' + lead + ' วัน (SOP กำหนด ' + cfg.leadDays + ' วัน)\n\n' +
+               'อาจได้รับยาไม่ทันวันเริ่มการทดลอง ต้องการส่งคำขอต่อไปหรือไม่?')) return;
+
+  submitting = true;
+  const btn = $('submitBtn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังส่งคำขอ…';
+
+  const ref = makeRef();
+  const payload = collect(ref);
+  try {
+    const res = await fetch(INBOX + '/' + ref + '.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (await res.text()).slice(0, 200));
+    notifyWebhook(payload);
+    lastPayload = payload;
+    $('refCode').textContent = ref;
+    $('doneEmail').textContent = payload.email;
+    $('formWrap').classList.add('hidden');
+    $('doneWrap').classList.remove('hidden');
+    window.scrollTo(0, 0);
+  } catch (e) {
+    renderAlerts([{ t:'err', h:'<b>ส่งคำขอไม่สำเร็จ</b> — กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง<br>' +
+      'หากยังส่งไม่ได้ กรุณาติดต่อสัตวแพทย์ประจำเรือนเลี้ยงสัตว์ทดลองโดยตรง<br>' +
+      '<span style="font-size:12.5px;opacity:.8">รายละเอียดทางเทคนิค: ' + esc(e.message) + '</span>' }]);
+    btn.disabled = false; btn.textContent = '📨 ส่งคำขอ';
+    submitting = false;
+  }
+}
+
+/* แจ้ง webhook ให้ส่งอีเมลอัตโนมัติ — ไม่รอผลและไม่ขัดจังหวะผู้ใช้ถ้าปลายทางล่ม
+   คำขอถูกบันทึกลง Firebase ไปแล้วก่อนถึงจุดนี้เสมอ */
+function notifyWebhook(payload) {
+  if (!WEBHOOK_URL) return;
+  try {
+    fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {});
+  } catch (e) { /* ไม่ต้องแจ้งผู้ใช้ — ไม่กระทบการยื่นคำขอ */ }
+}
+
+/* ---------- พิมพ์สำเนาให้ผู้ยื่น ---------- */
+let lastPayload = null;
+function copyRef() {
+  const t = $('refCode').textContent;
+  const done = () => toast('คัดลอกรหัสอ้างอิงแล้ว');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => prompt('คัดลอกรหัสนี้:', t));
+  else prompt('คัดลอกรหัสนี้:', t);
+}
+function printSummary() {
+  const p = lastPayload; if (!p) return;
+  const rows = p.items.map((it, i) =>
+    '<tr><td style="text-align:center">' + (i+1) + '</td><td>' + esc(it.name) + '</td><td>' + esc(it.strength || '-') +
+    '</td><td style="text-align:right">' + esc(it.qty) + '</td><td>' + esc(it.unit || '-') + '</td><td>' + esc(it.note || '') + '</td></tr>').join('');
+  const w = window.open('', '_blank');
+  if (!w) { toast('เบราว์เซอร์บล็อกหน้าต่างใหม่ — อนุญาต pop-up แล้วลองอีกครั้ง'); return; }
+  w.document.write(
+    '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>สำเนาคำขอ ' + esc(p.ref) + '</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">' +
+    '<style>body{font-family:Sarabun,Tahoma,sans-serif;font-size:13.5px;color:#000;padding:18px;max-width:760px;margin:0 auto}' +
+    'h1{font-size:18px;text-align:center;margin-bottom:2px}h2{font-size:13px;border-left:4px solid #0e7c66;padding-left:7px;margin:14px 0 6px}' +
+    '.sub{text-align:center;font-size:12px;color:#333;margin-bottom:10px}' +
+    'table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{border:1px solid #666;padding:4px 7px;vertical-align:top}' +
+    'th{background:#e5f4f0;text-align:left}table.kv th{width:180px}' +
+    '.ref{text-align:center;font-size:20px;font-weight:700;letter-spacing:1.5px;border:2px solid #0e7c66;padding:8px;margin:10px 0}' +
+    '@media print{@page{size:A4 portrait;margin:14mm}}</style></head><body>' +
+    '<h1>สำเนาคำขอซื้อยาและเวชภัณฑ์เพื่องานวิจัย</h1>' +
+    '<div class="sub">ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์ · ตาม SOP MED101 · ยื่นเมื่อ ' + esc(thaiDate(todayIso())) + '</div>' +
+    '<div class="ref">' + esc(p.ref) + '</div>' +
+    '<h2>ข้อมูลผู้ขอใช้บริการ</h2><table class="kv">' +
+    '<tr><th>นักวิจัยผู้สั่งซื้อยา</th><td>' + esc(p.name) + '</td></tr>' +
+    '<tr><th>หน่วยงาน / คณะ / ภาควิชา</th><td>' + esc(p.org) + '</td></tr>' +
+    '<tr><th>เลขที่ใบอนุญาตใช้สัตว์ทดลอง</th><td>' + esc(p.license) + '</td></tr>' +
+    '<tr><th>เบอร์โทร / E-mail</th><td>' + esc(p.phone) + ' · ' + esc(p.email) + '</td></tr>' +
+    '<tr><th>ออกใบเสร็จในนาม</th><td>' + esc(p.bill || p.name) + (p.tax ? ' · เลขประจำตัวผู้เสียภาษี ' + esc(p.tax) : '') + '</td></tr>' +
+    '</table>' +
+    '<h2>ข้อมูลงานวิจัย</h2><table class="kv">' +
+    '<tr><th>เลขที่งานวิจัย</th><td>' + esc(p.studyNo || '-') + '</td></tr>' +
+    '<tr><th>ชื่องานวิจัย</th><td>' + esc(p.studyTitle || '-') + '</td></tr>' +
+    '<tr><th>สัตว์ทดลองที่ใช้</th><td>' + esc(p.animals || '-') + '</td></tr>' +
+    '<tr><th>วันที่เริ่มใช้ยา</th><td>' + esc(thaiDate(p.startUse)) + '</td></tr>' +
+    '</table>' +
+    '<h2>ชนิดยาและจำนวนที่ขอ</h2><table><thead><tr><th style="width:30px;text-align:center">ที่</th><th>ชื่อยา / เวชภัณฑ์</th>' +
+    '<th style="width:110px">ความเข้มข้น</th><th style="width:60px">จำนวน</th><th style="width:70px">หน่วย</th><th>หมายเหตุ</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    (p.note ? '<h2>หมายเหตุถึงสัตวแพทย์</h2><p>' + esc(p.note) + '</p>' : '') +
+    '<h2>สถานะ</h2><p>ยื่นคำขอแล้ว — <b>รอสัตวแพทย์ตรวจสอบและแจ้งค่าใช้จ่ายกลับทางอีเมล</b><br>' +
+    'เอกสารฉบับนี้เป็นสำเนาสำหรับผู้ยื่นเท่านั้น ไม่ใช่การยืนยันการสั่งซื้อ</p>' +
+    '</body></html>');
+  w.document.close();
+  setTimeout(() => w.print(), 700);
+}
+
+/* ---------- โหลดค่าพารามิเตอร์จากคลาวด์ ---------- */
+async function loadConfig() {
+  try {
+    const res = await fetch(CONFIG, { cache: 'no-store' });
+    if (!res.ok) return;
+    const c = await res.json();
+    if (!c) return;
+    if (num(c.leadDays)) cfg.leadDays = num(c.leadDays);
+    if (num(c.payDays)) cfg.payDays = num(c.payDays);
+    if (num(c.buyDays)) cfg.buyDays = num(c.buyDays);
+    if (Array.isArray(c.drugs)) cfg.drugs = c.drugs;
+  } catch (e) { /* ใช้ค่าตั้งต้นต่อไป */ }
+  applyConfig();
+}
+function applyConfig() {
+  $('leadLabel').textContent = cfg.leadDays;
+  $('leadLabel2').textContent = cfg.leadDays;
+  $('payLabel').textContent = cfg.payDays;
+  $('payLabel2').textContent = cfg.payDays;
+  $('buyLabel').textContent = cfg.buyDays;
+  $('drugList').innerHTML = cfg.drugs.map(d => '<option value="' + esc(d) + '">').join('');
+}
+
+function init() {
+  addRow();
+  applyConfig();
+  loadConfig();
+  $('fStartUse').min = todayIso();
+  $('fStartUse').addEventListener('change', checkLead);
+  $('netHint').textContent = navigator.onLine ? '' : '⚠ ขณะนี้ไม่ได้เชื่อมต่ออินเทอร์เน็ต';
+  window.addEventListener('online',  () => { $('netHint').textContent = ''; });
+  window.addEventListener('offline', () => { $('netHint').textContent = '⚠ ขณะนี้ไม่ได้เชื่อมต่ออินเทอร์เน็ต'; });
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
