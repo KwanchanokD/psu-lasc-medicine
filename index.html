@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบบริการยาและเวชภัณฑ์เพื่องานวิจัย — PSU:LASC (SOP MED101)</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e7c66">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PSU:LASC MED">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0e7c66;
+    --primary-dark: #0a5f4e;
+    --primary-light: #e5f4f0;
+    --accent: #1a5c9e;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
+    --warning: #b9770e;
+    --warning-light: #fdf3e2;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #dfe6ee;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Sarabun', 'Leelawadee UI', 'Tahoma', sans-serif;
+    background: var(--bg); color: var(--text);
+    font-size: 15px; line-height: 1.6;
+  }
+  header.app-header {
+    background:
+      radial-gradient(900px 200px at 88% -40%, rgba(255,255,255,.20), transparent 70%),
+      linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff; padding: 14px 22px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    border-bottom: 3px solid var(--accent);
+  }
+  /* ตราสัญลักษณ์ระบบ — ไฟล์เป็นภาพจัตุรัส 500x500 วงกลม MEDICINE SERVICE กินพื้นที่ราว 79% ของภาพ
+     ที่เหลือเป็นขอบขาวและตรา PSU:LASC เล็ก ๆ ที่มุมบนซ้าย
+     บนหัวแอปขยาย 1.3 เท่าแล้วครอบเป็นวงกลม จึงเห็นตราเต็มวงไม่มีขอบขาวเหลือ
+     (ตรา PSU:LASC มุมภาพเล็กเกินกว่าจะอ่านออกที่ขนาดนี้ และมีชื่อศูนย์ฯ กำกับอยู่ข้าง ๆ แล้ว) */
+  header.app-header .logo {
+    background: #fff; border-radius: 50%;
+    width: 58px; height: 58px; flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,.22);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  header.app-header .logo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.3); }
+  header.app-header h1 { font-size: 17.5px; font-weight: 600; }
+  header.app-header p { font-size: 12.5px; opacity: .85; }
+
+  nav.tabs {
+    background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; gap: 2px; padding: 0 14px; overflow-x: auto;
+    position: sticky; top: 0; z-index: 30;
+  }
+  nav.tabs button {
+    background: none; border: none; border-bottom: 3px solid transparent;
+    padding: 12px 15px; font-family: inherit; font-size: 14.5px; font-weight: 500;
+    color: var(--muted); cursor: pointer; white-space: nowrap;
+  }
+  nav.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
+  nav.tabs button:hover { color: var(--primary-dark); }
+  nav.tabs button .badge {
+    display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px;
+    background: var(--danger); color: #fff; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600; line-height: 18px; text-align: center;
+  }
+  nav.tabs button .badge.zero { display: none; }
+
+  .container { max-width: 1180px; margin: 0 auto; padding: 20px 16px 80px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    margin-bottom: 18px; overflow: hidden;
+  }
+  .card-head {
+    padding: 12px 18px; background: var(--primary-light);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .card-head h2 { font-size: 15.5px; font-weight: 600; color: var(--primary-dark); }
+  .card-head .hint { font-size: 12.5px; color: var(--muted); font-weight: 400; }
+  .card-body { padding: 18px; }
+
+  .grid { display: grid; gap: 13px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .grid-4 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  label.field { display: block; font-size: 13.5px; font-weight: 500; }
+  label.field span.req { color: var(--danger); }
+  label.field small { display:block; color: var(--muted); font-weight: 400; font-size: 12px; }
+  label.field input, label.field select, label.field textarea {
+    display: block; width: 100%; margin-top: 4px; padding: 8px 11px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: inherit; font-size: 14.5px; background: #fff; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  label.field input:focus, label.field select:focus, label.field textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,124,102,.12);
+  }
+  label.check { display: flex; align-items: flex-start; gap: 8px; font-size: 13.8px; font-weight: 500; }
+  label.check input { margin-top: 4px; flex: none; width: 16px; height: 16px; accent-color: var(--primary); }
+  input[readonly], input:disabled { background: #f2f5f8; color: #5b6b7a; }
+  textarea { resize: vertical; min-height: 62px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border: none; border-radius: 8px;
+    font-family: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer;
+    background: var(--primary); color: #fff; text-decoration: none;
+    transition: background .15s, transform .05s;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+  .btn.secondary:hover { background: var(--primary-light); }
+  .btn.blue { background: var(--accent); }
+  .btn.blue:hover { background: #124a82; }
+  .btn.success { background: #1f8a4c; }
+  .btn.success:hover { background: #176b3b; }
+  .btn.danger { background: var(--danger); }
+  .btn.danger:hover { background: #96281b; }
+  .btn.ghost { background: #fff; color: var(--muted); border: 1px solid var(--border); }
+  .btn.ghost:hover { background: #eef2f6; color: var(--text); }
+  .btn.sm { padding: 5px 11px; font-size: 13px; border-radius: 7px; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  table.data { width: 100%; border-collapse: collapse; font-size: 13.8px; }
+  table.data th, table.data td { border-bottom: 1px solid var(--border); padding: 7px 8px; text-align: left; vertical-align: middle; }
+  table.data th { background: #f7f9fb; font-weight: 600; font-size: 13px; color: var(--primary-dark); white-space: nowrap; }
+  table.data td.num, table.data th.num { text-align: right; }
+  table.data td.ctr, table.data th.ctr { text-align: center; }
+  table.data tr:hover td { background: #fbfdfe; }
+  table.data input, table.data select {
+    width: 100%; padding: 5px 7px; border: 1px solid var(--border);
+    border-radius: 6px; font-family: inherit; font-size: 13.5px;
+  }
+  .table-wrap { overflow-x: auto; }
+
+  .chip {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    font-size: 12.3px; font-weight: 600; white-space: nowrap;
+  }
+  .chip.draft     { background:#eef2f6; color:#5b6b7a; }
+  .chip.submitted { background:#e8f1fa; color:#124a82; }
+  .chip.quoted    { background:#fdf3e2; color:#8a5a06; }
+  .chip.paid      { background:#e5f4f0; color:#0a5f4e; }
+  .chip.ordered   { background:#e9e5f7; color:#4b3b8f; }
+  .chip.received  { background:#e2efda; color:#376e2a; }
+  .chip.expired   { background:#fdecea; color:#9c0006; }
+  .chip.cancelled { background:#f0f0f0; color:#777; }
+  .chip.ctrl      { background:#fdecea; color:#9c0006; }
+  .chip.stock     { background:#e8f1fa; color:#124a82; }
+
+  .alert { border-radius: 9px; padding: 11px 14px; font-size: 13.8px; margin-bottom: 12px; border: 1px solid; }
+  .alert.warn { background: var(--warning-light); border-color: #f0c987; color: #7a4f06; }
+  .alert.err  { background: var(--danger-light); border-color: #f5c6cb; color: #9c0006; }
+  .alert.info { background: #e8f1fa; border-color: #b9d4ee; color: #124a82; }
+  .alert.ok   { background: #e2efda; border-color: #a9d08e; color: #376e2a; }
+  .alert b { font-weight: 600; }
+  .alert ul { margin: 5px 0 0 18px; }
+
+  .stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .stat {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 13px 15px; border-left: 4px solid var(--primary);
+  }
+  .stat .v { font-size: 23px; font-weight: 700; color: var(--primary-dark); line-height: 1.2; }
+  .stat .k { font-size: 12.5px; color: var(--muted); }
+  .stat.warn { border-left-color: var(--warning); } .stat.warn .v { color: var(--warning); }
+  .stat.err  { border-left-color: var(--danger); }  .stat.err .v  { color: var(--danger); }
+  .stat.blue { border-left-color: var(--accent); }  .stat.blue .v { color: var(--accent); }
+
+  .flow { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 12.8px; }
+  .flow .step {
+    background: #fff; border: 1px solid var(--border); border-radius: 999px;
+    padding: 4px 12px; color: var(--muted);
+  }
+  .flow .step.done { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); font-weight: 600; }
+  .flow .step.now  { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+  .flow .arrow { color: #c6d2dd; }
+
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); }
+  .sec-title {
+    font-size: 14px; font-weight: 600; color: var(--primary-dark);
+    border-left: 4px solid var(--primary); padding-left: 9px; margin: 18px 0 10px;
+  }
+  .sec-title:first-child { margin-top: 0; }
+  details.ref { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; background:#fff; }
+  details.ref > summary { padding: 10px 14px; cursor: pointer; font-weight: 500; font-size: 14px; color: var(--primary-dark); }
+  details.ref > div { padding: 0 14px 14px; font-size: 13.5px; }
+  ul.plain { padding-left: 20px; }
+  ul.plain li { margin-bottom: 5px; }
+  .filters { display: flex; gap: 9px; flex-wrap: wrap; align-items: flex-end; }
+  .filters label.field { min-width: 150px; flex: 1 1 150px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    background: #2c3e50; color: #fff; padding: 11px 22px; border-radius: 999px;
+    font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,.25); z-index: 200;
+    opacity: 0; pointer-events: none; transition: opacity .2s, bottom .2s;
+  }
+  .toast.show { opacity: 1; bottom: 36px; }
+
+  /* ---------- แถบสถานะคลาวด์ และหน้าต่างเข้าสู่ระบบ ---------- */
+  .sync-chip {
+    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35);
+    color: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12.5px;
+    white-space: nowrap; max-width: 340px; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sync-chip.ok  { background: rgba(46,204,113,.28); }
+  .sync-chip.err { background: rgba(231,76,60,.38); }
+  #loginModal {
+    position: fixed; inset: 0; z-index: 300; background: rgba(20,32,45,.55);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  #loginModal .box {
+    background: #fff; border-radius: 14px; padding: 24px 26px;
+    width: 100%; max-width: 390px; box-shadow: 0 18px 50px rgba(0,0,0,.3);
+  }
+  #loginModal .box .logo-wrap { width: 104px; height: 104px; overflow: hidden; margin: 0 auto 8px; }
+  #loginModal .box .logo-wrap img { width: 104px; height: 104px; object-fit: contain; display: block; }
+
+  /* ---------- แบบพิมพ์เอกสาร A4 ---------- */
+  #printArea { display: none; }
+  @media print {
+    @page { size: A4 portrait; margin: 12mm 12mm 14mm; }
+    body { background: #fff; font-size: 13px; }
+    header.app-header, nav.tabs, .container, .toast, #updateBar { display: none !important; }
+    #printArea { display: block !important; }
+    .md-doc { page-break-after: always; }
+    .md-doc:last-child { page-break-after: auto; }
+  }
+  .md-doc { color: #000; font-size: 13.2px; line-height: 1.5; position: relative; }
+  .md-logo { width: 96px; height: 75px; overflow: hidden; flex: none; }
+  .md-logo img { width: 96px; height: 96px; object-fit: contain; display: block; }
+  .md-watermark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; }
+  .md-watermark img { width: 54%; opacity: .05; transform: translateY(-6%); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .md-doc > *:not(.md-watermark) { position: relative; z-index: 1; }
+  .md-head { display: flex; gap: 12px; align-items: flex-start; border-bottom: 2px solid #0e7c66; padding-bottom: 8px; }
+  .md-head .org { flex: 1; }
+  .md-head .org .th { font-size: 16px; font-weight: 700; color: #0a5f4e; }
+  .md-head .org .en { font-size: 12px; color: #333; }
+  .md-head .org .addr { font-size: 11.5px; color: #333; margin-top: 3px; }
+  .md-head .code { text-align: right; font-size: 11.3px; color: #0a5f4e; font-weight: 600; line-height: 1.45; }
+  .md-title { text-align: center; margin: 10px 0 7px; }
+  .md-title .t1 { font-size: 18.5px; font-weight: 700; letter-spacing: .5px; }
+  .md-title .t2 { font-size: 12.5px; color: #333; }
+  .md-meta { display: flex; gap: 14px; font-size: 12.3px; }
+  .md-meta > div { flex: 1; border: 1px solid #999; padding: 6px 9px; }
+  .md-meta table { width: 100%; border-collapse: collapse; }
+  .md-meta td { padding: 1px 0; vertical-align: top; }
+  .md-meta td.k { width: 110px; color: #333; }
+  .md-sec { margin-top: 9px; font-weight: 700; font-size: 13px; border-left: 4px solid #0e7c66; padding-left: 7px; }
+  table.md-items { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12.3px; }
+  table.md-items th, table.md-items td { border: 1px solid #666; padding: 4px 6px; }
+  table.md-items th { background: #e5f4f0; text-align: center; font-weight: 600; }
+  table.md-items td.num { text-align: right; }
+  table.md-items td.ctr { text-align: center; }
+  table.md-kv { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12.4px; }
+  table.md-kv th, table.md-kv td { border: 1px solid #666; padding: 4px 7px; vertical-align: top; }
+  table.md-kv th { background: #f4f6f9; text-align: left; font-weight: 600; width: 172px; }
+  .md-sum { display: flex; gap: 12px; margin-top: 8px; align-items: flex-start; }
+  .md-sum .words { flex: 1; border: 1px solid #666; padding: 7px 9px; font-size: 12.5px; }
+  .md-sum .amt { width: 258px; }
+  .md-sum .amt table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .md-sum .amt td { border: 1px solid #666; padding: 3px 7px; }
+  .md-sum .amt td.k { background: #f4f6f9; }
+  .md-sum .amt td.v { text-align: right; }
+  .md-sum .amt tr.grand td { font-weight: 700; font-size: 13.5px; background: #e5f4f0; }
+  .md-terms { margin-top: 9px; border: 1px solid #666; padding: 7px 10px; font-size: 11.8px; }
+  .md-terms ol { padding-left: 18px; margin: 3px 0 0; }
+  .md-terms li { margin-bottom: 2px; }
+  .md-sign { display: flex; gap: 16px; margin-top: 18px; text-align: center; font-size: 12.3px; }
+  .md-sign > div { flex: 1; }
+  .md-sign .line { border-bottom: 1px dotted #000; height: 40px; margin-bottom: 4px; }
+  .md-foot { margin-top: 10px; font-size: 10.5px; color: #444; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 4px; }
+  .md-box { border: 1px solid #666; padding: 7px 10px; margin-top: 8px; font-size: 12.3px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo"><img src="logo-medicine.png" alt="PSU:LASC Medicine Service — บริการยาและเวชภัณฑ์"></div>
+  <div>
+    <h1>ระบบบริการยาและเวชภัณฑ์เพื่องานวิจัย</h1>
+    <p>ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์ · ตามมาตรฐานขั้นตอนการปฏิบัติงาน SOP MED101
+      <span id="verLabel" style="opacity:.75;font-size:12px;margin-left:6px"></span></p>
+  </div>
+  <span class="sync-chip" id="cloudChip" style="margin-left:auto">☁ กำลังเชื่อมต่อ…</span>
+  <button class="btn sm" style="background:#fff;color:var(--primary-dark)"
+          title="ตรวจหาเวอร์ชันใหม่ และล้างแคชของแอปเพื่อโหลดไฟล์ล่าสุด" onclick="updateNow()">🔄 อัปเดต</button>
+  <button id="logoutBtn" class="btn sm hidden" style="background:#fff;color:var(--primary-dark)" onclick="doLogout()">🚪 ออกจากระบบ</button>
+  <button id="installBtn" class="btn sm hidden" style="background:#fff;color:var(--primary-dark)" onclick="installApp()">⬇ ติดตั้งแอป</button>
+</header>
+
+<div id="cloudBar" class="hidden" style="background:#fff4e5;border-bottom:1px solid #f0c987;padding:10px 22px;font-size:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+  <span id="cloudBarMsg">☁ <b>ยังไม่ได้เข้าสู่ระบบ</b> — ข้อมูลจะบันทึกเฉพาะในเครื่องนี้ และเลขที่คำขออาจซ้ำกับเครื่องอื่น</span>
+  <button class="btn sm success" onclick="openLogin()">🔑 เข้าสู่ระบบ</button>
+  <button class="btn sm secondary" onclick="document.getElementById('cloudBar').classList.add('hidden')">ภายหลัง</button>
+</div>
+
+<div id="loginModal" class="hidden">
+  <div class="box">
+    <div class="logo-wrap"><img src="logo-medicine.png" alt="PSU:LASC Medicine Service"></div>
+    <h3 style="color:var(--primary-dark);text-align:center;margin-bottom:4px">เข้าสู่ระบบ</h3>
+    <p style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px">
+      ใช้อีเมลและรหัสผ่านชุดเดียวกับระบบใบเสนอราคา และระบบตรวจติดตามการดำเนินการต่อสัตว์ฯ<br>
+      เพื่อให้คำขอ บัญชียา และเลขที่คำขอซิงก์ตรงกันทุกเครื่อง
+    </p>
+    <form onsubmit="doLogin(event)">
+      <label class="field">อีเมล
+        <input type="email" id="lg_email" required autocomplete="username" placeholder="you@psu.ac.th">
+      </label>
+      <label class="field" style="margin-top:10px">รหัสผ่าน
+        <input type="password" id="lg_pass" required autocomplete="current-password" placeholder="อย่างน้อย 6 ตัวอักษร">
+      </label>
+      <div id="lg_error" class="hidden" style="margin-top:10px;background:#fdecea;border:1px solid #f5c6cb;color:#9c0006;border-radius:8px;padding:9px 12px;font-size:13.5px"></div>
+      <div class="btn-row" style="margin-top:16px">
+        <button type="submit" class="btn success" id="lg_submit">🔑 เข้าสู่ระบบ</button>
+        <button type="button" class="btn secondary" onclick="document.getElementById('loginModal').classList.add('hidden')">ยกเลิก</button>
+      </div>
+    </form>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:12px">
+      ลืมรหัสผ่าน หรือยังไม่มีบัญชี — ติดต่อผู้ดูแลระบบเพื่อสร้าง/รีเซ็ตให้ (สมัครเองไม่ได้)
+    </p>
+  </div>
+</div>
+
+<div id="updateBar" class="hidden" style="background:#e2efda;border-bottom:1px solid #a9d08e;padding:10px 22px;font-size:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+  <span>✅ <b>มีเวอร์ชันใหม่พร้อมใช้งาน</b> — กดโหลดใหม่เพื่อใช้เวอร์ชันล่าสุด</span>
+  <button class="btn sm" onclick="applyUpdate()">โหลดใหม่</button>
+</div>
+
+<nav class="tabs">
+  <button data-tab="dash" class="active">🏠 แดชบอร์ด<span class="badge zero" id="badgeDash"></span></button>
+  <button data-tab="form">📝 คำขอซื้อยา</button>
+  <button data-tab="list">📋 ทะเบียนคำขอ</button>
+  <button data-tab="drugs">💊 คลังยาและราคา<span class="badge zero" id="badgeDrug"></span></button>
+  <button data-tab="sop">📘 ขั้นตอนตาม SOP</button>
+  <button data-tab="settings">⚙️ ตั้งค่าระบบ</button>
+</nav>
+
+<div class="container">
+
+<!-- ============================ แดชบอร์ด ============================ -->
+<section class="page active" id="page-dash">
+  <div id="dashAlerts"></div>
+
+  <div class="stats" id="dashStats"></div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-head">
+      <h2>งานที่ต้องดำเนินการ</h2>
+      <span class="hint">เรียงตามความเร่งด่วน — กดที่แถวเพื่อเปิดคำขอ</span>
+    </div>
+    <div class="table-wrap"><table class="data" id="dashTodo"></table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>ยาและเวชภัณฑ์ที่ต้องเฝ้าระวัง</h2>
+      <span class="hint">ใกล้หมดอายุ / หมดอายุแล้ว / คงเหลือต่ำกว่าจุดสั่งซื้อ</span>
+    </div>
+    <div class="table-wrap"><table class="data" id="dashDrugs"></table></div>
+  </div>
+</section>
+
+<!-- ============================ คำขอซื้อยา ============================ -->
+<section class="page" id="page-form">
+
+  <div class="card">
+    <div class="card-head">
+      <h2>คำขอซื้อยาและเวชภัณฑ์ — <span id="fNoLabel">คำขอใหม่</span></h2>
+      <div class="btn-row">
+        <button class="btn ghost sm" onclick="newRequest()">➕ คำขอใหม่</button>
+        <button class="btn success sm" onclick="saveRequest()">💾 บันทึก</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="flow" id="fFlow"></div>
+      <div id="fAlerts" style="margin-top:12px"></div>
+
+      <div class="sec-title">ข้อมูลคำขอ</div>
+      <div class="grid grid-4">
+        <label class="field">เลขที่คำขอ (รหัสบริการ)
+          <input id="fNo" placeholder="ออกอัตโนมัติเมื่อบันทึก" readonly>
+        </label>
+        <label class="field">วันที่ยื่นคำขอ <span class="req">*</span>
+          <input type="date" id="fDate" onchange="onFormDateChange()">
+        </label>
+        <label class="field">วันที่เริ่มใช้ยา <span class="req">*</span>
+          <small>SOP 6.1 — ยื่นล่วงหน้าอย่างน้อย <span id="fLeadHint">30</span> วัน</small>
+          <input type="date" id="fStartUse" onchange="checkLead()">
+        </label>
+        <label class="field">สถานะ
+          <input id="fStatusLabel" readonly>
+        </label>
+      </div>
+
+      <div class="sec-title">1. ข้อมูลผู้ขอใช้บริการ</div>
+      <div class="grid grid-3">
+        <label class="field">นักวิจัยผู้สั่งซื้อยา <span class="req">*</span>
+          <input id="fReqName" list="dlResearchers" placeholder="ชื่อ-นามสกุล" oninput="autofillResearcher()">
+          <datalist id="dlResearchers"></datalist>
+        </label>
+        <label class="field">หน่วยงาน / คณะ / ภาควิชา <span class="req">*</span>
+          <input id="fReqOrg" placeholder="เช่น คณะวิทยาศาสตร์ ภาควิชาชีววิทยา">
+        </label>
+        <label class="field">เลขประจำตัวผู้เสียภาษี
+          <small>ใช้ออกใบเสร็จ/ใบกำกับภาษี (SOP 6.6)</small>
+          <input id="fReqTax" placeholder="13 หลัก">
+        </label>
+        <label class="field">เลขที่ใบอนุญาตใช้สัตว์ทดลอง <span class="req">*</span>
+          <input id="fReqLicense" placeholder="เช่น 2569-SCI06-013">
+        </label>
+        <label class="field">เบอร์โทรที่ติดต่อได้ <span class="req">*</span>
+          <input id="fReqPhone" placeholder="0X-XXX-XXXX">
+        </label>
+        <label class="field">E-mail <span class="req">*</span>
+          <small>ช่องทางแจ้งค่าใช้จ่ายตาม SOP 6.2</small>
+          <input type="email" id="fReqEmail" placeholder="name@psu.ac.th">
+        </label>
+        <label class="field">ชื่อในการออกบิล/ใบเสร็จ
+          <input id="fReqBill" placeholder="ออกใบเสร็จในนาม">
+        </label>
+        <label class="field">ที่อยู่สำหรับออกใบเสร็จ
+          <input id="fReqAddr" placeholder="ที่อยู่ตามที่ต้องการให้ระบุในใบเสร็จ">
+        </label>
+        <label class="field">ผู้ดำเนินการชำระเงิน
+          <input id="fPayer" placeholder="ถ้าไม่ใช่ผู้ขอซื้อ ให้ระบุชื่อผู้ชำระ">
+        </label>
+      </div>
+
+      <div class="sec-title">2. ข้อมูลงานวิจัย</div>
+      <div class="grid grid-3">
+        <label class="field">เลขที่งานวิจัย
+          <input id="fStudyNo" placeholder="Study No. / เลขที่โครงการ">
+        </label>
+        <label class="field" style="grid-column:span 2">ชื่องานวิจัย
+          <input id="fStudyTitle" placeholder="ชื่อโครงการวิจัย">
+        </label>
+      </div>
+
+      <div class="sec-title">3. ชนิดยาและจำนวน</div>
+      <div class="btn-row" style="margin-bottom:10px">
+        <select id="fPicker" style="min-width:260px;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14.5px"></select>
+        <button class="btn sm" onclick="addItemFromPicker()">➕ เพิ่มจากคลังยา</button>
+        <button class="btn secondary sm" onclick="addItemRow()">➕ เพิ่มรายการว่าง</button>
+      </div>
+      <div class="table-wrap"><table class="data" id="fItems"></table></div>
+
+      <div class="grid grid-3" style="margin-top:14px">
+        <label class="field">ค่าดำเนินการ (บาท)
+          <small>ตามใบแจ้งค่าใช้จ่าย Med102</small>
+          <input type="number" id="fFee" min="0" step="0.01" value="0" oninput="recalcTotals()">
+        </label>
+        <label class="field">รวมค่าใช้จ่ายทั้งหมด (บาท)
+          <input id="fTotal" readonly>
+        </label>
+        <label class="field">สถานที่จำหน่ายยา/เวชภัณฑ์
+          <input id="fVendor" list="dlVendors" placeholder="เช่น โรงพยาบาลสัตว์ ม.อ. คณะสัตวแพทยศาสตร์">
+          <datalist id="dlVendors"></datalist>
+        </label>
+      </div>
+
+      <div class="sec-title">4. เอกสารแนบ</div>
+      <div class="grid grid-3">
+        <label class="check"><input type="checkbox" id="fAttLicense"> สำเนาใบอนุญาตใช้สัตว์ทดลอง</label>
+        <label class="check"><input type="checkbox" id="fAttId"> สำเนาบัตรประชาชน</label>
+        <label class="check"><input type="checkbox" id="fAttCtrl"> แบบคำขอวัตถุออกฤทธิ์/ยาเสพติดให้โทษ (เฉพาะยาควบคุม)</label>
+      </div>
+      <label class="field" style="margin-top:12px">ลิงก์/ที่จัดเก็บไฟล์อ้างอิงเอกสาร
+        <input id="fFileRef" placeholder="วางลิงก์ SharePoint หรือชื่อโฟลเดอร์เอกสาร">
+      </label>
+      <label class="field" style="margin-top:12px">หมายเหตุ
+        <textarea id="fNote" placeholder="บันทึกเพิ่มเติมของสัตวแพทย์ผู้รับผิดชอบ"></textarea>
+      </label>
+
+      <div class="btn-row" style="margin-top:18px">
+        <button class="btn" onclick="saveRequest()">💾 บันทึกคำขอ</button>
+        <button class="btn blue" onclick="printDoc('med101')">🖨️ พิมพ์ใบขอซื้อยา (Med101)</button>
+        <button class="btn ghost" onclick="newRequest()">➕ เริ่มคำขอใหม่</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- ขั้นตอนดำเนินการ ---------- -->
+  <div class="card">
+    <div class="card-head">
+      <h2>การดำเนินการตามขั้นตอน SOP</h2>
+      <span class="hint">บันทึกเมื่อผ่านแต่ละขั้น ระบบจะคำนวณกำหนดเวลาให้อัตโนมัติ</span>
+    </div>
+    <div class="card-body">
+
+      <div class="sec-title">ขั้นที่ 1 — ยื่นคำขอ (SOP 6.1)</div>
+      <div class="btn-row">
+        <button class="btn sm" onclick="advance('submitted')">✔ รับคำขอเข้าระบบ</button>
+        <span class="muted" style="font-size:13px">ผู้ขอซื้อกรอกใบขอซื้อยาให้ครบถ้วนก่อนวันเริ่มใช้ยา</span>
+      </div>
+
+      <div class="sec-title">ขั้นที่ 2 — แจ้งค่าใช้จ่ายทางอีเมล (SOP 6.2)</div>
+      <div class="grid grid-3">
+        <label class="field">วันที่แจ้งค่าใช้จ่าย
+          <input type="date" id="fQuoteDate" onchange="syncDue()">
+        </label>
+        <label class="field">ครบกำหนดชำระเงิน
+          <small>= วันที่แจ้ง + <span id="fPayHint">7</span> วัน (SOP 6.2)</small>
+          <input id="fPayDue" readonly>
+        </label>
+        <label class="field">ส่งอีเมลถึง
+          <input id="fQuoteTo" placeholder="อีเมลผู้ขอซื้อ">
+        </label>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn sm" onclick="advance('quoted')">✔ บันทึกการแจ้งค่าใช้จ่าย</button>
+        <button class="btn blue sm" onclick="printDoc('med102')">🖨️ พิมพ์ใบแจ้งค่าใช้จ่าย (Med102)</button>
+        <button class="btn secondary sm" onclick="mailQuote()">✉️ ร่างอีเมลแจ้งราคา</button>
+      </div>
+
+      <div class="sec-title">ขั้นที่ 3 — รับชำระเงิน (SOP 6.3, 6.4)</div>
+      <div class="grid grid-3">
+        <label class="field">วันที่ชำระเงิน
+          <input type="date" id="fPaidDate" onchange="syncDue()">
+        </label>
+        <label class="field">ช่องทาง/เลขที่อ้างอิงการชำระ
+          <input id="fPayRef" placeholder="เช่น โอน 12/08/2569 อ้างอิง XXXX">
+        </label>
+        <label class="field">ครบกำหนดจัดซื้อ
+          <small>= วันที่ชำระ + <span id="fBuyHint">7</span> วัน (SOP 6.3)</small>
+          <input id="fBuyDue" readonly>
+        </label>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn sm" onclick="advance('paid')">✔ บันทึกการชำระเงิน</button>
+        <button class="btn danger sm" onclick="markExpired()">⏱ เกินกำหนดชำระ — ให้ยื่นคำขอใหม่</button>
+      </div>
+
+      <div class="sec-title">ขั้นที่ 4 — จัดซื้อยาและเวชภัณฑ์ (SOP 6.3, 6.6)</div>
+      <div class="grid grid-3">
+        <label class="field">วันที่สั่งซื้อ
+          <input type="date" id="fOrderDate">
+        </label>
+        <label class="field">เลขที่ใบเสร็จ/ใบกำกับภาษี
+          <input id="fReceiptNo" placeholder="ออกโดยสถานที่จำหน่าย">
+        </label>
+        <label class="field">วันที่ออกใบเสร็จ
+          <input type="date" id="fReceiptDate">
+        </label>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn sm" onclick="advance('ordered')">✔ บันทึกการจัดซื้อ</button>
+        <button class="btn blue sm" onclick="printDoc('order')">🖨️ พิมพ์ใบสั่งซื้อถึงบริษัท</button>
+      </div>
+
+      <div class="sec-title">ขั้นที่ 5 — ส่งมอบและตรวจรับ (SOP 6.7)</div>
+      <div class="grid grid-3">
+        <label class="field">วันที่ผู้ขอซื้อรับยา
+          <input type="date" id="fRecvDate">
+        </label>
+        <label class="field">ผู้รับยา
+          <input id="fRecvBy" placeholder="ชื่อผู้มารับยา">
+        </label>
+        <label class="field">รหัสเอกสารแบบบันทึกการรับยา
+          <small>รูปแบบ ปปปป-ดด-วว-NNN-C</small>
+          <input id="fRecvCode" placeholder="ออกอัตโนมัติเมื่อบันทึกการรับยา">
+        </label>
+        <label class="field">ตรวจสอบชนิด ความเข้มข้น และจำนวน
+          <select id="fChecked">
+            <option value="no">ยังไม่ตรวจสอบ</option>
+            <option value="ok">ตรวจสอบแล้ว ถูกต้อง</option>
+            <option value="bad">ตรวจสอบแล้ว ไม่ถูกต้อง</option>
+          </select>
+        </label>
+        <label class="field">ได้รับใบเสร็จ/ใบกำกับภาษี
+          <select id="fReceiptGot">
+            <option value="no">ยังไม่ได้รับ</option>
+            <option value="yes">ได้รับเรียบร้อยแล้ว</option>
+          </select>
+        </label>
+        <label class="field">หมายเหตุการตรวจรับ
+          <input id="fRecvNote" placeholder="เช่น พบขวดชำรุด 1 ขวด">
+        </label>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn sm" onclick="advance('received')">✔ บันทึกการรับยา (ปิดงาน)</button>
+        <button class="btn blue sm" onclick="printDoc('med103')">🖨️ พิมพ์แบบบันทึกการรับยา (Med103)</button>
+        <button class="btn ghost sm" onclick="printDoc('all')">🖨️ พิมพ์ครบชุด 3 ฉบับ</button>
+      </div>
+
+      <div class="sec-title">ยกเลิกคำขอ</div>
+      <div class="alert warn" style="margin-bottom:10px">
+        <b>SOP 6.5</b> — เมื่อผู้ขอซื้อชำระเงินและสัตวแพทย์ดำเนินการซื้อยาแล้ว <b>ไม่สามารถยกเลิกได้ในทุกกรณี</b>
+        ระบบจะปิดปุ่มยกเลิกเมื่อคำขออยู่ในสถานะ “สั่งซื้อแล้ว” เป็นต้นไป
+      </div>
+      <div class="btn-row">
+        <button class="btn danger sm" id="btnCancel" onclick="cancelRequest()">✖ ยกเลิกคำขอ</button>
+      </div>
+
+      <div class="sec-title">ประวัติการดำเนินการ</div>
+      <div class="table-wrap"><table class="data" id="fHistory"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ทะเบียนคำขอ ============================ -->
+<section class="page" id="page-list">
+  <div class="card">
+    <div class="card-head">
+      <h2>ทะเบียนคำขอซื้อยาและเวชภัณฑ์</h2>
+      <div class="btn-row">
+        <button class="btn ghost sm" onclick="exportCsv()">⬇️ CSV</button>
+        <button class="btn ghost sm" onclick="copyRegistryRow()">📋 คัดลอกแถวลงชีท</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="filters">
+        <label class="field">ค้นหา
+          <input id="qSearch" placeholder="เลขที่ / ชื่อนักวิจัย / ชื่อยา / เลขที่งานวิจัย" oninput="renderList()">
+        </label>
+        <label class="field">สถานะ
+          <select id="qStatus" onchange="renderList()">
+            <option value="">ทุกสถานะ</option>
+            <option value="open">เฉพาะที่ยังไม่ปิดงาน</option>
+            <option value="draft">ร่าง</option>
+            <option value="submitted">ยื่นคำขอแล้ว</option>
+            <option value="quoted">แจ้งค่าใช้จ่าย/รอชำระ</option>
+            <option value="paid">ชำระเงินแล้ว</option>
+            <option value="ordered">สั่งซื้อแล้ว</option>
+            <option value="received">รับยาแล้ว</option>
+            <option value="expired">เกินกำหนดชำระ</option>
+            <option value="cancelled">ยกเลิก</option>
+          </select>
+        </label>
+        <label class="field">ปี (พ.ศ.)
+          <select id="qYear" onchange="renderList()"><option value="">ทุกปี</option></select>
+        </label>
+        <label class="field">เรียงตาม
+          <select id="qSort" onchange="renderList()">
+            <option value="new">ใหม่สุดก่อน</option>
+            <option value="old">เก่าสุดก่อน</option>
+            <option value="due">ใกล้ครบกำหนดก่อน</option>
+          </select>
+        </label>
+      </div>
+      <div id="listSummary" class="muted" style="font-size:13px;margin:12px 0 6px"></div>
+      <div class="table-wrap"><table class="data" id="listTable"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ คลังยาและราคา ============================ -->
+<section class="page" id="page-drugs">
+  <div class="card">
+    <div class="card-head">
+      <h2>บัญชีรายการยาและเวชภัณฑ์</h2>
+      <div class="btn-row">
+        <button class="btn sm" onclick="addDrug()">➕ เพิ่มรายการ</button>
+        <button class="btn ghost sm" onclick="exportDrugCsv()">⬇️ CSV</button>
+        <button class="btn ghost sm" onclick="resetDrugs()">↺ คืนค่ารายการตั้งต้น</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="alert info">
+        ราคาตั้งต้นนำมาจากไฟล์ <b>รายการต้นทุนยา.xlsx</b> ของหน่วยงาน — <b>โปรดตรวจสอบและปรับปรุงราคาให้เป็นปัจจุบันก่อนใช้แจ้งค่าใช้จ่ายจริง</b>
+        ราคาที่แจ้งผู้ขอซื้อต้องเป็นราคาตามที่สถานที่จำหน่ายแจ้งในขณะนั้น (SOP 6.2)
+      </div>
+      <div class="filters" style="margin-bottom:12px">
+        <label class="field">ค้นหารายการ
+          <input id="dSearch" placeholder="ชื่อยา / ผู้จำหน่าย" oninput="renderDrugs()">
+        </label>
+        <label class="field">ประเภทควบคุม
+          <select id="dCtrl" onchange="renderDrugs()">
+            <option value="">ทั้งหมด</option>
+            <option value="ทั่วไป">ทั่วไป</option>
+            <option value="ยาอันตราย">ยาอันตราย</option>
+            <option value="ยาควบคุมพิเศษ">ยาควบคุมพิเศษ</option>
+            <option value="วัตถุออกฤทธิ์">วัตถุออกฤทธิ์ต่อจิตและประสาท</option>
+            <option value="ยาเสพติดให้โทษ">ยาเสพติดให้โทษ</option>
+          </select>
+        </label>
+        <label class="field">จุดสั่งซื้อ (คงเหลือต่ำกว่า)
+          <input type="number" id="dReorder" min="0" step="1" onchange="saveDrugMeta()">
+        </label>
+        <label class="field">แจ้งเตือนก่อนหมดอายุ (วัน)
+          <input type="number" id="dExpDays" min="0" step="1" onchange="saveDrugMeta()">
+        </label>
+      </div>
+      <div class="table-wrap"><table class="data" id="drugTable"></table></div>
+      <p class="muted" style="font-size:12.5px;margin-top:10px">
+        หน่วยนับ = หน่วยที่คิดราคาและตัดจ่าย (เช่น mL, ขวด, amp) · ราคาทุน/หน่วย และราคาขาย/หน่วย ใช้ตั้งต้นในใบแจ้งค่าใช้จ่าย
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ขั้นตอนตาม SOP ============================ -->
+<section class="page" id="page-sop">
+  <div class="card">
+    <div class="card-head">
+      <h2>มาตรฐานขั้นตอนการปฏิบัติงาน — ข้อปฏิบัติในการขอซื้อยาและเวชภัณฑ์เพื่อใช้ในงานวิจัย</h2>
+      <span class="hint">รหัส MED101 · ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์</span>
+    </div>
+    <div class="card-body">
+      <div class="alert warn">
+        <b>ข้อสังเกตเรื่องระยะเวลายื่นคำขอ</b> — เนื้อความข้อ 6.1 ของ SOP ระบุ “ก่อนวันเริ่มใช้ยาอย่างน้อย 30 วัน”
+        ขณะที่ผังขั้นตอนในหน้าถัดไปของ SOP ฉบับเดียวกันระบุ “14 วัน”
+        ระบบตั้งค่าเริ่มต้นไว้ที่ 30 วันตามเนื้อความ และเปิดให้แก้ไขได้ที่หน้า “ตั้งค่าระบบ”
+        <b>ควรปรับ SOP ให้ตรงกันในการทบทวนฉบับถัดไป</b>
+      </div>
+
+      <div class="sec-title">1. วัตถุประสงค์</div>
+      <p>เพื่อให้บริการนักวิจัยสามารถหาซื้อยาที่ต้องการใช้ในการทดลองได้สะดวกและถูกต้อง</p>
+
+      <div class="sec-title">2. ขอบเขต</div>
+      <p>เป็นการบริการภายในเรือนเลี้ยงสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์</p>
+
+      <div class="sec-title">3. ผู้มีหน้าที่รับผิดชอบ</div>
+      <p>สัตวแพทย์ประจำเรือนเลี้ยงสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์</p>
+
+      <div class="sec-title">4. วัสดุอุปกรณ์ (แบบฟอร์มที่ระบบออกให้)</div>
+      <ul class="plain">
+        <li><b>Med101</b> ใบขอซื้อยาในเรือนเลี้ยงสัตว์ทดลอง — พิมพ์จากหน้า “คำขอซื้อยา”</li>
+        <li><b>Med102</b> ใบแจ้งค่าใช้จ่ายการขอซื้อยาที่เรือนเลี้ยงสัตว์ทดลอง — พิมพ์จากขั้นที่ 2</li>
+        <li><b>Med103</b> แบบบันทึกการรับยาและเวชภัณฑ์ — พิมพ์จากขั้นที่ 5</li>
+      </ul>
+
+      <div class="sec-title">5. เอกสารอ้างอิง</div>
+      <p>ไม่มี</p>
+
+      <div class="sec-title">6. แนวทางปฏิบัติ และการบังคับใช้ในระบบ</div>
+      <div class="table-wrap"><table class="data" id="sopTable"></table></div>
+
+      <div class="sec-title">7. ขั้นตอนการปฏิบัติ</div>
+      <div class="flow" style="font-size:13.2px">
+        <span class="step done">ผู้ขอซื้อกรอกใบขอซื้อยา</span><span class="arrow">→</span>
+        <span class="step done">สัตวแพทย์ยืนยัน/แจ้งราคาทางอีเมล</span><span class="arrow">→</span>
+        <span class="step done">ผู้ขอซื้อชำระเงินภายใน 7 วัน</span><span class="arrow">→</span>
+        <span class="step done">สัตวแพทย์จัดซื้อภายใน 7 วัน</span><span class="arrow">→</span>
+        <span class="step done">สัตวแพทย์เตรียมยาพร้อมระบุชื่อผู้ขอซื้อ</span><span class="arrow">→</span>
+        <span class="step done">ผู้ขอซื้อตรวจสอบ รับยา และลงชื่อ</span>
+      </div>
+
+      <div class="sec-title">8. รหัสเอกสารและการจัดเก็บ</div>
+      <div class="table-wrap"><table class="data" id="sopDocTable"></table></div>
+
+      <div class="sec-title">ข้อปฏิบัติที่แจ้งผู้ขอซื้อ (พิมพ์ท้ายใบแจ้งค่าใช้จ่าย)</div>
+      <div class="table-wrap"><table class="data" id="sopTerms"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ตั้งค่าระบบ ============================ -->
+<section class="page" id="page-settings">
+  <div class="card">
+    <div class="card-head"><h2>ข้อมูลหน่วยงานและผู้รับผิดชอบ</h2><span class="hint">ใช้พิมพ์บนหัวเอกสารทุกฉบับ</span></div>
+    <div class="card-body">
+      <div class="grid grid-2">
+        <label class="field">ชื่อหน่วยงาน (ไทย) <input id="sOrgTh"></label>
+        <label class="field">ชื่อหน่วยงาน (อังกฤษ) <input id="sOrgEn"></label>
+        <label class="field" style="grid-column:span 2">ที่อยู่ <input id="sOrgAddr"></label>
+        <label class="field">โทรศัพท์ <input id="sOrgPhone"></label>
+        <label class="field">อีเมล <input id="sOrgEmail"></label>
+        <label class="field">เลขประจำตัวผู้เสียภาษีของหน่วยงาน <input id="sOrgTax"></label>
+        <label class="field">สถานที่จำหน่ายยาหลัก
+          <small>SOP ระบุ โรงพยาบาลสัตว์ ม.อ. คณะสัตวแพทยศาสตร์</small>
+          <input id="sVendor"></label>
+        <label class="field">สัตวแพทย์ผู้รับผิดชอบ <input id="sVetName"></label>
+        <label class="field">เลขที่ใบอนุญาตประกอบวิชาชีพ <input id="sVetLicense"></label>
+        <label class="field">ผู้ตรวจสอบ (ลงนามท้ายเอกสาร) <input id="sChecker"></label>
+        <label class="field">ผู้อนุมัติ (ลงนามท้ายเอกสาร) <input id="sApprover"></label>
+      </div>
+      <div class="btn-row" style="margin-top:14px"><button class="btn" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>พารามิเตอร์ตาม SOP</h2><span class="hint">แก้ไขได้เมื่อ SOP ฉบับใหม่กำหนดต่างไป</span></div>
+    <div class="card-body">
+      <div class="grid grid-4">
+        <label class="field">ยื่นคำขอล่วงหน้าอย่างน้อย (วัน)
+          <small>SOP 6.1</small><input type="number" id="sLeadDays" min="0"></label>
+        <label class="field">กำหนดชำระเงินภายใน (วัน)
+          <small>SOP 6.2, 6.4</small><input type="number" id="sPayDays" min="1"></label>
+        <label class="field">จัดซื้อภายในหลังชำระ (วัน)
+          <small>SOP 6.3</small><input type="number" id="sBuyDays" min="1"></label>
+        <label class="field">รับใบเสร็จภายใน (วัน)
+          <small>ข้อปฏิบัติข้อ 6</small><input type="number" id="sReceiptDays" min="1"></label>
+        <label class="field">ยืนยันคำขอทางอีเมลภายใน (วันทำการ)
+          <small>ผังขั้นตอน SOP</small><input type="number" id="sConfirmDays" min="1"></label>
+        <label class="field">ค่าดำเนินการตั้งต้น (บาท)
+          <input type="number" id="sFee" min="0" step="0.01"></label>
+        <label class="field">อายุการจัดเก็บเอกสาร (ปี)
+          <small>SOP ข้อ 8</small><input type="number" id="sRetention" min="1"></label>
+        <label class="field">ปิดสิทธิ์ยกเลิกตั้งแต่สถานะ
+          <select id="sLockCancel">
+            <option value="ordered">สั่งซื้อแล้ว (ตาม SOP 6.5)</option>
+            <option value="paid">ชำระเงินแล้ว</option>
+          </select></label>
+      </div>
+
+      <div class="sec-title">รูปแบบเลขที่คำขอ</div>
+      <div class="grid grid-4">
+        <label class="field">คำนำหน้า (ถ้ามี) <input id="sPrefix" placeholder="เว้นว่างได้"></label>
+        <label class="field">รูปแบบปี
+          <select id="sYearFmt">
+            <option value="be2">พ.ศ. 2 หลัก (68)</option>
+            <option value="be4">พ.ศ. 4 หลัก (2568)</option>
+            <option value="ce2">ค.ศ. 2 หลัก (25)</option>
+            <option value="ce4">ค.ศ. 4 หลัก (2025)</option>
+          </select></label>
+        <label class="field">จำนวนหลักเลขรัน <input type="number" id="sRunDigits" min="2" max="6"></label>
+        <label class="field">การรันเลข
+          <select id="sResetRun">
+            <option value="never">ต่อเนื่องไม่รีเซ็ตรายปี (ตามชีทเดิม)</option>
+            <option value="year">เริ่มนับ 1 ใหม่ทุกปี</option>
+          </select></label>
+        <label class="field">เลขรันถัดไป <input type="number" id="sNextRun" min="1" oninput="previewNo()"></label>
+        <label class="field">ตัวอย่างเลขที่ <input id="noPreview" readonly></label>
+      </div>
+      <div class="btn-row" style="margin-top:14px"><button class="btn" onclick="saveSettings()">💾 บันทึกการตั้งค่า</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>สำรองและกู้คืนข้อมูล</h2><span class="hint">ข้อมูลทั้งหมดเก็บในเครื่องนี้เท่านั้น</span></div>
+    <div class="card-body">
+      <div class="alert info">
+        <b>การเก็บข้อมูล:</b> ระบบบันทึกข้อมูลในเบราว์เซอร์ของเครื่องนี้ (localStorage) ไม่มีการส่งข้อมูลออกนอกเครื่อง
+        หากใช้งานหลายเครื่อง หรือก่อนล้างข้อมูลเบราว์เซอร์ ให้กด “สำรองข้อมูล” เก็บไฟล์ไว้เสมอ
+        และควรสำรองเก็บใน OneDrive ของหน่วยงานตามอายุการจัดเก็บ <span id="sRetLabel">3</span> ปี
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="exportJson()">⬇️ สำรองข้อมูล (JSON)</button>
+        <label class="btn secondary" style="cursor:pointer">⬆️ กู้คืนข้อมูล
+          <input type="file" accept="application/json" onchange="importJson(event)" style="display:none">
+        </label>
+        <button class="btn ghost" onclick="exportCsv()">⬇️ ส่งออกทะเบียน (CSV)</button>
+        <button class="btn danger" onclick="wipeAll()">🗑️ ล้างข้อมูลทั้งหมด</button>
+      </div>
+      <p class="muted" style="font-size:12.8px;margin-top:12px" id="storageInfo"></p>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   ระบบบริการยาและเวชภัณฑ์เพื่องานวิจัย — ศูนย์บริการสัตว์ทดลอง ม.อ.
+   อ้างอิง SOP รหัส MED101 (ข้อปฏิบัติในการขอซื้อยาและเวชภัณฑ์เพื่อใช้ในงานวิจัย)
+   เก็บข้อมูลในเครื่องด้วย localStorage — ไม่มีการส่งข้อมูลออกนอกเครื่อง
+   ===================================================================== */
+const APP_VERSION = '1.2.0';
+const STORE_KEY = 'psu-lasc-medicine-v1';
+
+/* ---------------- ค่าตั้งต้น ---------------- */
+const DEFAULT_SETTINGS = {
+  orgTh: 'ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์',
+  orgEn: 'Laboratory Animals Service Center, Prince of Songkla University',
+  orgAddr: 'ตำบลคอหงส์ อำเภอหาดใหญ่ จังหวัดสงขลา 90110',
+  orgPhone: '',
+  orgEmail: '',
+  orgTax: '',
+  vendor: 'โรงพยาบาลสัตว์ มหาวิทยาลัยสงขลานครินทร์ คณะสัตวแพทยศาสตร์',
+  vetName: 'สพ.ญ.ขวัญชนก เดชยง',
+  vetLicense: '01-7235/2553',
+  checker: '',
+  approver: '',
+  leadDays: 30,
+  payDays: 7,
+  buyDays: 7,
+  receiptDays: 14,
+  confirmDays: 3,
+  fee: 0,
+  retention: 3,
+  lockCancel: 'ordered',
+  prefix: '',
+  yearFmt: 'be2',
+  runDigits: 3,
+  resetRun: 'never',
+  reorder: 2,
+  expDays: 90
+};
+
+/* รายการยาตั้งต้น — จากไฟล์ “รายการต้นทุนยา.xlsx” ของหน่วยงาน
+   pack = ปริมาณต่อขวด/หน่วยบรรจุ, packPrice = ราคาต่อขวด, cost = ราคาทุนต่อหน่วยนับ,
+   sell = ราคาขาย (150% ของต้นทุน), sellAlt = ราคาขายเพื่อป้องกันยาหมดอายุ */
+const DEFAULT_DRUGS = [
+  { name:'Thiopental sodium', pack:'20 mL', unit:'ขวด', packPrice:200,  cost:200, sell:300, sellAlt:300,  ctrl:'ยาควบคุมพิเศษ' },
+  { name:'Sterile water',     pack:'',      unit:'ขวด', packPrice:0,    cost:0,   sell:0,   sellAlt:0,    ctrl:'ทั่วไป' },
+  { name:'Carprofen injection (Rimadyl®)', pack:'50 mL', unit:'mL', packPrice:1570, cost:35, sell:60, sellAlt:200, ctrl:'ยาอันตราย' },
+  { name:'Tramadol',          pack:'50 amps', unit:'amp', packPrice:305, cost:10, sell:20,  sellAlt:50,  ctrl:'ยาควบคุมพิเศษ' },
+  { name:'Isoflurane',        pack:'250 mL', unit:'mL',  packPrice:1700, cost:7,  sell:20,  sellAlt:30,  ctrl:'ยาควบคุมพิเศษ' },
+  { name:'Isoflurane (ทั้งขวด)', pack:'250 mL', unit:'ขวด', packPrice:1700, cost:1700, sell:2000, sellAlt:2000, ctrl:'ยาควบคุมพิเศษ' },
+  { name:'Tiletamine/Zolazepam (Zoletil®)', pack:'5 mL', unit:'mL', packPrice:1485, cost:300, sell:500, sellAlt:500, ctrl:'วัตถุออกฤทธิ์' },
+  { name:'Tiletamine/Zolazepam (Zoletil®) ทั้งขวด', pack:'5 mL', unit:'ขวด', packPrice:1485, cost:1485, sell:2000, sellAlt:2000, ctrl:'วัตถุออกฤทธิ์' },
+  { name:'Xylazine',          pack:'50 mL',  unit:'mL',  packPrice:230,  cost:5,   sell:10,  sellAlt:30,  ctrl:'ยาควบคุมพิเศษ' },
+  { name:'Atropine',          pack:'100 mL', unit:'mL',  packPrice:85,   cost:9,   sell:15,  sellAlt:30,  ctrl:'ยาอันตราย' },
+  { name:'Diazepam',          pack:'',       unit:'amp', packPrice:0,    cost:0,   sell:0,   sellAlt:0,   ctrl:'วัตถุออกฤทธิ์' },
+  { name:'Dexmedetomidine',   pack:'10 mL',  unit:'mL',  packPrice:3750, cost:375, sell:565, sellAlt:600, ctrl:'ยาควบคุมพิเศษ' },
+  { name:'Atipamezole',       pack:'10 mL',  unit:'mL',  packPrice:3200, cost:320, sell:480, sellAlt:600, ctrl:'ยาอันตราย' },
+  { name:'Enrofloxacin',      pack:'50 mL',  unit:'mL',  packPrice:1000, cost:20,  sell:30,  sellAlt:100, ctrl:'ยาอันตราย' },
+  { name:'Ampicillin',        pack:'1 amp',  unit:'amp', packPrice:30,   cost:30,  sell:45,  sellAlt:50,  ctrl:'ยาอันตราย' },
+  { name:'Lidocaine',         pack:'50 mL',  unit:'mL',  packPrice:50,   cost:1,   sell:15,  sellAlt:30,  ctrl:'ยาอันตราย' }
+];
+
+const STATUS = {
+  draft:     { label:'ร่าง',                 order:0 },
+  submitted: { label:'ยื่นคำขอแล้ว',          order:1 },
+  quoted:    { label:'แจ้งค่าใช้จ่าย/รอชำระ', order:2 },
+  paid:      { label:'ชำระเงินแล้ว',          order:3 },
+  ordered:   { label:'สั่งซื้อแล้ว',           order:4 },
+  received:  { label:'รับยาแล้ว (ปิดงาน)',     order:5 },
+  expired:   { label:'เกินกำหนดชำระ',         order:-1 },
+  cancelled: { label:'ยกเลิก',                order:-1 }
+};
+const FLOW_STEPS = ['submitted','quoted','paid','ordered','received'];
+
+let db = null;
+let cur = null;      /* คำขอที่กำลังแก้ไข */
+let curItems = [];   /* รายการยาในคำขอปัจจุบัน */
+
+/* ---------------- โหลด / บันทึก ---------------- */
+function blankDb() {
+  return {
+    version: 1,
+    settings: Object.assign({}, DEFAULT_SETTINGS),
+    drugs: DEFAULT_DRUGS.map((d, i) => Object.assign({ id:'d' + (i+1), stock:0, expiry:'', vendor:'' }, d)),
+    requests: [],
+    nextRun: 1
+  };
+}
+function load() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORE_KEY); } catch (e) {}
+  if (!raw) { db = blankDb(); return; }
+  try {
+    const obj = JSON.parse(raw);
+    db = Object.assign(blankDb(), obj);
+    db.settings = Object.assign({}, DEFAULT_SETTINGS, obj.settings || {});
+    if (!Array.isArray(db.drugs) || !db.drugs.length) db.drugs = blankDb().drugs;
+    if (!Array.isArray(db.requests)) db.requests = [];
+  } catch (e) { db = blankDb(); }
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); }
+  catch (e) {
+    alert('บันทึกข้อมูลลงเครื่องไม่สำเร็จ (พื้นที่จัดเก็บของเบราว์เซอร์เต็ม หรือถูกปิดกั้น)\n' +
+          'กรุณาใช้ปุ่ม “สำรองข้อมูล” เก็บไฟล์ไว้ก่อนปิดหน้าต่าง\n\nรายละเอียด: ' + e.message);
+  }
+}
+
+/* ---------------- เครื่องมือทั่วไป ---------------- */
+const $ = (id) => document.getElementById(id);
+const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+function num(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+function money(n) { return num(n).toLocaleString('th-TH', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function todayIso() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function thaiDate(iso) {
+  if (!iso) return '-';
+  const p = String(iso).split('-');
+  if (p.length !== 3) return iso;
+  const d = new Date(+p[0], +p[1]-1, +p[2]);
+  if (isNaN(d.getTime())) return iso;
+  return d.getDate() + ' ' + TH_MONTHS[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+}
+function addDays(iso, days) {
+  if (!iso) return '';
+  const p = String(iso).split('-');
+  const d = new Date(+p[0], +p[1]-1, +p[2]);
+  if (isNaN(d.getTime())) return '';
+  d.setDate(d.getDate() + num(days));
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+/* จำนวนวันจาก a ถึง b (บวก = b อยู่หลัง a) */
+function dayDiff(a, b) {
+  if (!a || !b) return 0;
+  const pa = String(a).split('-'), pb = String(b).split('-');
+  const da = new Date(+pa[0], +pa[1]-1, +pa[2]), dbb = new Date(+pb[0], +pb[1]-1, +pb[2]);
+  if (isNaN(da.getTime()) || isNaN(dbb.getTime())) return 0;
+  return Math.round((dbb - da) / 86400000);
+}
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function uid() { return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------------- จำนวนเงินเป็นตัวอักษร ---------------- */
+const TH_DIGITS = ['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+const TH_PLACES = ['','สิบ','ร้อย','พัน','หมื่น','แสน'];
+function readIntTh(s) {
+  s = String(s).replace(/^0+/, '');
+  if (s === '') return '';
+  if (s.length > 6) return readIntTh(s.slice(0, s.length-6)) + 'ล้าน' + readIntTh(s.slice(-6));
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const d = +s[i], pos = s.length - i - 1;
+    if (d === 0) continue;
+    if (pos === 0) out += (d === 1 && s.length > 1) ? 'เอ็ด' : TH_DIGITS[d];
+    else if (pos === 1) out += (d === 1) ? 'สิบ' : (d === 2 ? 'ยี่สิบ' : TH_DIGITS[d] + 'สิบ');
+    else out += TH_DIGITS[d] + TH_PLACES[pos];
+  }
+  return out;
+}
+function bahtText(n) {
+  n = Math.round(num(n) * 100) / 100;
+  const neg = n < 0; n = Math.abs(n);
+  const int = Math.floor(n), sat = Math.round((n - int) * 100);
+  if (int === 0 && sat === 0) return 'ศูนย์บาทถ้วน';
+  let s = '';
+  if (int > 0) s += readIntTh(String(int)) + 'บาท';
+  if (sat > 0) s += readIntTh(String(sat)) + 'สตางค์';
+  else s += 'ถ้วน';
+  return (neg ? 'ลบ' : '') + s;
+}
+
+/* ---------------- เลขที่คำขอ ---------------- */
+function yearToken(iso) {
+  const p = String(iso || todayIso()).split('-');
+  const ce = +p[0] || new Date().getFullYear();
+  const be = ce + 543;
+  switch (db.settings.yearFmt) {
+    case 'be4': return String(be);
+    case 'ce4': return String(ce);
+    case 'ce2': return String(ce).slice(-2);
+    default:    return String(be).slice(-2);
+  }
+}
+function buildNo(iso, run) {
+  const s = db.settings;
+  const digits = Math.max(2, Math.min(6, num(s.runDigits) || 3));
+  const body = yearToken(iso) + '-' + String(run).padStart(digits, '0');
+  return s.prefix ? (s.prefix + '/' + body) : body;
+}
+function nextRunFor(iso) {
+  const used = new Set(db.requests.map(r => r.no).filter(Boolean));
+  let run;
+  if (db.settings.resetRun === 'year') {
+    const tok = yearToken(iso);
+    run = 1;
+    db.requests.forEach(r => {
+      if (!r.no) return;
+      const m = String(r.no).split('/').pop().split('-');
+      if (m[0] === tok) run = Math.max(run, num(m[1]) + 1);
+    });
+  } else {
+    run = Math.max(1, num(db.nextRun) || 1);
+  }
+  while (used.has(buildNo(iso, run))) run++;
+  return run;
+}
+function previewNo() {
+  readSettingsForm();
+  const iso = ($('fDate') && $('fDate').value) || todayIso();
+  $('noPreview').value = buildNo(iso, num($('sNextRun').value) || nextRunFor(iso));
+}
+/* รหัสเอกสารแบบบันทึกการรับยา — รูปแบบเดิมของหน่วยงาน ปปปป-ดด-วว-NNN-C */
+function receiptCode(iso) {
+  const d = (iso || todayIso());
+  const sameDay = db.requests.filter(r => r.recv && r.recv.code && r.recv.code.indexOf(d) === 0).length;
+  return d + '-' + String(sameDay + 1).padStart(3, '0') + '-C';
+}
+
+/* ================= หน้าตั้งค่าระบบ ================= */
+function fillSettingsForm() {
+  const s = db.settings;
+  $('sOrgTh').value = s.orgTh; $('sOrgEn').value = s.orgEn; $('sOrgAddr').value = s.orgAddr;
+  $('sOrgPhone').value = s.orgPhone; $('sOrgEmail').value = s.orgEmail; $('sOrgTax').value = s.orgTax;
+  $('sVendor').value = s.vendor; $('sVetName').value = s.vetName; $('sVetLicense').value = s.vetLicense;
+  $('sChecker').value = s.checker; $('sApprover').value = s.approver;
+  $('sLeadDays').value = s.leadDays; $('sPayDays').value = s.payDays; $('sBuyDays').value = s.buyDays;
+  $('sReceiptDays').value = s.receiptDays; $('sConfirmDays').value = s.confirmDays;
+  $('sFee').value = s.fee; $('sRetention').value = s.retention; $('sLockCancel').value = s.lockCancel;
+  $('sPrefix').value = s.prefix; $('sYearFmt').value = s.yearFmt;
+  $('sRunDigits').value = s.runDigits; $('sResetRun').value = s.resetRun;
+  $('sNextRun').value = nextRunFor(todayIso());
+  $('sRetLabel').textContent = s.retention;
+  $('noPreview').value = buildNo(todayIso(), nextRunFor(todayIso()));
+  $('storageInfo').textContent =
+    'คำขอในระบบ ' + db.requests.length + ' รายการ · รายการยา ' + db.drugs.length + ' รายการ · ' +
+    'ขนาดข้อมูลโดยประมาณ ' + (JSON.stringify(db).length / 1024).toFixed(1) + ' KB · เวอร์ชัน ' + APP_VERSION;
+}
+function readSettingsForm() {
+  const page = $('page-settings');
+  if (!page || !page.classList.contains('active')) return;
+  const s = db.settings;
+  s.orgTh = $('sOrgTh').value.trim(); s.orgEn = $('sOrgEn').value.trim(); s.orgAddr = $('sOrgAddr').value.trim();
+  s.orgPhone = $('sOrgPhone').value.trim(); s.orgEmail = $('sOrgEmail').value.trim(); s.orgTax = $('sOrgTax').value.trim();
+  s.vendor = $('sVendor').value.trim(); s.vetName = $('sVetName').value.trim(); s.vetLicense = $('sVetLicense').value.trim();
+  s.checker = $('sChecker').value.trim(); s.approver = $('sApprover').value.trim();
+  s.leadDays = num($('sLeadDays').value); s.payDays = Math.max(1, num($('sPayDays').value));
+  s.buyDays = Math.max(1, num($('sBuyDays').value)); s.receiptDays = Math.max(1, num($('sReceiptDays').value));
+  s.confirmDays = Math.max(1, num($('sConfirmDays').value));
+  s.fee = num($('sFee').value); s.retention = Math.max(1, num($('sRetention').value));
+  s.lockCancel = $('sLockCancel').value;
+  s.prefix = $('sPrefix').value.trim(); s.yearFmt = $('sYearFmt').value;
+  s.runDigits = Math.max(2, Math.min(6, num($('sRunDigits').value) || 3));
+  s.resetRun = $('sResetRun').value;
+}
+function saveSettings() {
+  readSettingsForm();
+  if (db.settings.resetRun === 'never') db.nextRun = Math.max(1, num($('sNextRun').value) || 1);
+  save();
+  cloudPushMaster();
+  fillSettingsForm();
+  applySettingsHints();
+  toast('บันทึกการตั้งค่าแล้ว');
+}
+function applySettingsHints() {
+  const s = db.settings;
+  $('fLeadHint').textContent = s.leadDays;
+  $('fPayHint').textContent = s.payDays;
+  $('fBuyHint').textContent = s.buyDays;
+  $('dReorder').value = s.reorder;
+  $('dExpDays').value = s.expDays;
+}
+function saveDrugMeta() {
+  db.settings.reorder = Math.max(0, num($('dReorder').value));
+  db.settings.expDays = Math.max(0, num($('dExpDays').value));
+  save(); cloudPushMaster(); renderDrugs(); renderDash();
+}
+function wipeAll() {
+  if (!confirm('ล้างข้อมูลทั้งหมดในเครื่องนี้ (คำขอ ' + db.requests.length + ' รายการ และการตั้งค่า)?\n' +
+               'แนะนำให้กด “สำรองข้อมูล” เก็บไฟล์ไว้ก่อน — การล้างข้อมูลย้อนกลับไม่ได้')) return;
+  if (!confirm('ยืนยันอีกครั้ง: ข้อมูลทั้งหมดจะถูกลบถาวร')) return;
+  db = blankDb(); save(); initViews(); toast('ล้างข้อมูลเรียบร้อยแล้ว');
+}
+
+/* ================= คลังยาและราคา ================= */
+function drugById(id) { return db.drugs.find(d => d.id === id); }
+function addDrug() {
+  db.drugs.push({ id:'d' + Date.now().toString(36), name:'', pack:'', unit:'ขวด',
+    packPrice:0, cost:0, sell:0, sellAlt:0, ctrl:'ทั่วไป', stock:0, expiry:'', vendor:'' });
+  save(); cloudPushMaster(); renderDrugs(); fillPicker();
+}
+function updDrug(id, field, val) {
+  const d = drugById(id); if (!d) return;
+  d[field] = ['packPrice','cost','sell','sellAlt','stock'].includes(field) ? num(val) : val;
+  save(); cloudPushMaster(); fillPicker(); renderDash();
+}
+function delDrug(id) {
+  const d = drugById(id); if (!d) return;
+  if (!confirm('ลบรายการ “' + (d.name || '(ไม่มีชื่อ)') + '” ออกจากบัญชียา?')) return;
+  db.drugs = db.drugs.filter(x => x.id !== id);
+  save(); cloudPushMaster(); renderDrugs(); fillPicker(); renderDash();
+}
+function resetDrugs() {
+  if (!confirm('คืนค่าบัญชียาเป็นรายการตั้งต้นจากไฟล์ “รายการต้นทุนยา.xlsx”?\nรายการที่เพิ่มเอง ราคาที่แก้ไข และยอดคงเหลือจะหายทั้งหมด')) return;
+  db.drugs = blankDb().drugs;
+  save(); cloudPushMaster(); renderDrugs(); fillPicker(); renderDash(); toast('คืนค่ารายการยาตั้งต้นแล้ว');
+}
+function drugExpiryState(d) {
+  if (!d.expiry) return '';
+  const diff = dayDiff(todayIso(), d.expiry);
+  if (diff < 0) return 'expired';
+  if (diff <= num(db.settings.expDays)) return 'soon';
+  return '';
+}
+function renderDrugs() {
+  const q = ($('dSearch').value || '').trim().toLowerCase();
+  const ctrl = $('dCtrl').value;
+  const rows = db.drugs.filter(d => {
+    if (ctrl && d.ctrl !== ctrl) return false;
+    if (!q) return true;
+    return (d.name + ' ' + (d.vendor || '')).toLowerCase().includes(q);
+  });
+  const head = '<thead><tr>' +
+    '<th style="min-width:190px">ชื่อยา / เวชภัณฑ์</th><th>หน่วยบรรจุ</th><th>หน่วยนับ</th>' +
+    '<th class="num">ราคา/บรรจุ</th><th class="num">ทุน/หน่วย</th><th class="num">ขาย/หน่วย</th>' +
+    '<th class="num">ขาย (กันหมดอายุ)</th><th class="num">คงเหลือ</th><th>วันหมดอายุ</th>' +
+    '<th>ประเภทควบคุม</th><th>ผู้จำหน่าย</th><th class="ctr">ลบ</th></tr></thead>';
+  const body = rows.map(d => {
+    const st = drugExpiryState(d);
+    const expTag = st === 'expired' ? ' <span class="chip expired">หมดอายุ</span>'
+                 : st === 'soon' ? ' <span class="chip quoted">ใกล้หมดอายุ</span>' : '';
+    const lowTag = num(d.stock) > 0 && num(d.stock) <= num(db.settings.reorder)
+      ? ' <span class="chip quoted">คงเหลือต่ำ</span>' : '';
+    return '<tr>' +
+      '<td><input value="' + esc(d.name) + '" oninput="updDrug(\'' + d.id + '\',\'name\',this.value)">' +
+        (d.ctrl && d.ctrl !== 'ทั่วไป' ? '<div style="margin-top:3px"><span class="chip ctrl">' + esc(d.ctrl) + '</span></div>' : '') + '</td>' +
+      '<td><input value="' + esc(d.pack) + '" oninput="updDrug(\'' + d.id + '\',\'pack\',this.value)"></td>' +
+      '<td><input value="' + esc(d.unit) + '" style="max-width:70px" oninput="updDrug(\'' + d.id + '\',\'unit\',this.value)"></td>' +
+      '<td class="num"><input type="number" step="0.01" value="' + num(d.packPrice) + '" oninput="updDrug(\'' + d.id + '\',\'packPrice\',this.value)"></td>' +
+      '<td class="num"><input type="number" step="0.01" value="' + num(d.cost) + '" oninput="updDrug(\'' + d.id + '\',\'cost\',this.value)"></td>' +
+      '<td class="num"><input type="number" step="0.01" value="' + num(d.sell) + '" oninput="updDrug(\'' + d.id + '\',\'sell\',this.value)"></td>' +
+      '<td class="num"><input type="number" step="0.01" value="' + num(d.sellAlt) + '" oninput="updDrug(\'' + d.id + '\',\'sellAlt\',this.value)"></td>' +
+      '<td class="num"><input type="number" step="0.01" value="' + num(d.stock) + '" oninput="updDrug(\'' + d.id + '\',\'stock\',this.value)">' + lowTag + '</td>' +
+      '<td><input type="date" value="' + esc(d.expiry) + '" oninput="updDrug(\'' + d.id + '\',\'expiry\',this.value)">' + expTag + '</td>' +
+      '<td><select onchange="updDrug(\'' + d.id + '\',\'ctrl\',this.value)">' +
+        ['ทั่วไป','ยาอันตราย','ยาควบคุมพิเศษ','วัตถุออกฤทธิ์','ยาเสพติดให้โทษ']
+          .map(c => '<option' + (d.ctrl === c ? ' selected' : '') + '>' + c + '</option>').join('') +
+        '</select></td>' +
+      '<td><input value="' + esc(d.vendor) + '" oninput="updDrug(\'' + d.id + '\',\'vendor\',this.value)"></td>' +
+      '<td class="ctr"><button class="btn ghost sm" onclick="delDrug(\'' + d.id + '\')">🗑️</button></td>' +
+    '</tr>';
+  }).join('');
+  $('drugTable').innerHTML = head + '<tbody>' + (body ||
+    '<tr><td colspan="12" class="ctr muted" style="padding:18px">ไม่พบรายการที่ตรงกับเงื่อนไข</td></tr>') + '</tbody>';
+}
+function exportDrugCsv() {
+  const head = ['ชื่อยา/เวชภัณฑ์','หน่วยบรรจุ','หน่วยนับ','ราคาต่อหน่วยบรรจุ','ราคาทุนต่อหน่วย',
+    'ราคาขายต่อหน่วย','ราคาขายเพื่อป้องกันหมดอายุ','คงเหลือ','วันหมดอายุ','ประเภทควบคุม','ผู้จำหน่าย'];
+  const lines = [head.join(',')].concat(db.drugs.map(d => [
+    d.name, d.pack, d.unit, num(d.packPrice).toFixed(2), num(d.cost).toFixed(2),
+    num(d.sell).toFixed(2), num(d.sellAlt).toFixed(2), num(d.stock), d.expiry, d.ctrl, d.vendor
+  ].map(csvCell).join(',')));
+  download('LASC-drug-list-' + todayIso() + '.csv', '﻿' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+  toast('ส่งออกบัญชียาเป็น CSV แล้ว');
+}
+function fillPicker() {
+  const sel = $('fPicker');
+  sel.innerHTML = '<option value="">— เลือกยา/เวชภัณฑ์จากบัญชี —</option>' +
+    db.drugs.map(d => '<option value="' + esc(d.id) + '">' + esc(d.name || '(ไม่มีชื่อ)') +
+      (d.pack ? ' · ' + esc(d.pack) : '') + (num(d.sell) ? ' · ' + money(d.sell) + ' บาท/' + esc(d.unit) : '') +
+      '</option>').join('');
+}
+
+/* ================= ฟอร์มคำขอ ================= */
+function blankRequest() {
+  return {
+    id: uid(), no: '', date: todayIso(), status: 'draft', startUse: '',
+    req: { name:'', org:'', tax:'', license:'', phone:'', email:'', bill:'', addr:'', payer:'' },
+    study: { no:'', title:'' },
+    items: [], fee: num(db.settings.fee), total: 0, vendor: db.settings.vendor,
+    att: { license:false, id:false, ctrl:false }, fileRef:'', note:'',
+    quote: { date:'', to:'', due:'' },
+    pay: { date:'', ref:'', buyDue:'' },
+    order: { date:'', receiptNo:'', receiptDate:'' },
+    recv: { date:'', by:'', code:'', checked:'no', receiptGot:'no', note:'' },
+    cancelReason: '',
+    history: []
+  };
+}
+function newRequest() {
+  cur = blankRequest();
+  curItems = [];
+  fillForm();
+  showTab('form');
+  toast('เริ่มคำขอใหม่');
+}
+function fillForm() {
+  const r = cur;
+  $('fNo').value = r.no; $('fNoLabel').textContent = r.no ? ('เลขที่ ' + r.no) : 'คำขอใหม่';
+  $('fDate').value = r.date; $('fStartUse').value = r.startUse;
+  $('fStatusLabel').value = STATUS[r.status].label;
+  $('fReqName').value = r.req.name; $('fReqOrg').value = r.req.org; $('fReqTax').value = r.req.tax;
+  $('fReqLicense').value = r.req.license; $('fReqPhone').value = r.req.phone; $('fReqEmail').value = r.req.email;
+  $('fReqBill').value = r.req.bill; $('fReqAddr').value = r.req.addr; $('fPayer').value = r.req.payer;
+  $('fStudyNo').value = r.study.no; $('fStudyTitle').value = r.study.title;
+  $('fFee').value = num(r.fee); $('fVendor').value = r.vendor;
+  $('fAttLicense').checked = !!r.att.license; $('fAttId').checked = !!r.att.id; $('fAttCtrl').checked = !!r.att.ctrl;
+  $('fFileRef').value = r.fileRef; $('fNote').value = r.note;
+  $('fQuoteDate').value = r.quote.date; $('fQuoteTo').value = r.quote.to || r.req.email;
+  $('fPaidDate').value = r.pay.date; $('fPayRef').value = r.pay.ref;
+  $('fOrderDate').value = r.order.date; $('fReceiptNo').value = r.order.receiptNo; $('fReceiptDate').value = r.order.receiptDate;
+  $('fRecvDate').value = r.recv.date; $('fRecvBy').value = r.recv.by; $('fRecvCode').value = r.recv.code;
+  $('fChecked').value = r.recv.checked; $('fReceiptGot').value = r.recv.receiptGot; $('fRecvNote').value = r.recv.note;
+  curItems = (r.items || []).map(x => Object.assign({}, x));
+  renderItems(); syncDue(); renderFlow(); renderHistory(); checkLead(); fillDatalists();
+}
+function collectForm() {
+  const r = cur;
+  r.date = $('fDate').value; r.startUse = $('fStartUse').value;
+  r.req = {
+    name: $('fReqName').value.trim(), org: $('fReqOrg').value.trim(), tax: $('fReqTax').value.trim(),
+    license: $('fReqLicense').value.trim(), phone: $('fReqPhone').value.trim(), email: $('fReqEmail').value.trim(),
+    bill: $('fReqBill').value.trim(), addr: $('fReqAddr').value.trim(), payer: $('fPayer').value.trim()
+  };
+  r.study = { no: $('fStudyNo').value.trim(), title: $('fStudyTitle').value.trim() };
+  r.items = curItems.map(x => Object.assign({}, x));
+  r.fee = num($('fFee').value);
+  r.total = totalOf(r);
+  r.vendor = $('fVendor').value.trim();
+  r.att = { license: $('fAttLicense').checked, id: $('fAttId').checked, ctrl: $('fAttCtrl').checked };
+  r.fileRef = $('fFileRef').value.trim(); r.note = $('fNote').value.trim();
+  r.quote = { date: $('fQuoteDate').value, to: $('fQuoteTo').value.trim(),
+              due: $('fQuoteDate').value ? addDays($('fQuoteDate').value, db.settings.payDays) : '' };
+  r.pay = { date: $('fPaidDate').value, ref: $('fPayRef').value.trim(),
+            buyDue: $('fPaidDate').value ? addDays($('fPaidDate').value, db.settings.buyDays) : '' };
+  r.order = { date: $('fOrderDate').value, receiptNo: $('fReceiptNo').value.trim(), receiptDate: $('fReceiptDate').value };
+  r.recv = { date: $('fRecvDate').value, by: $('fRecvBy').value.trim(), code: $('fRecvCode').value.trim(),
+             checked: $('fChecked').value, receiptGot: $('fReceiptGot').value, note: $('fRecvNote').value.trim() };
+  return r;
+}
+function itemAmount(it) { return num(it.qty) * num(it.price); }
+function totalOf(r) {
+  return (r.items || []).reduce((s, it) => s + itemAmount(it), 0) + num(r.fee);
+}
+function addItemFromPicker() {
+  const d = drugById($('fPicker').value);
+  if (!d) { toast('เลือกยาจากบัญชีก่อน'); return; }
+  curItems.push({ drugId:d.id, name:d.name, strength:d.pack, unit:d.unit, qty:1, price:num(d.sell), ctrl:d.ctrl, note:'' });
+  renderItems(); recalcTotals();
+}
+function addItemRow() {
+  curItems.push({ drugId:'', name:'', strength:'', unit:'', qty:1, price:0, ctrl:'ทั่วไป', note:'' });
+  renderItems(); recalcTotals();
+}
+function delItem(i) { curItems.splice(i, 1); renderItems(); recalcTotals(); }
+function updItem(i, field, val) {
+  curItems[i][field] = (field === 'qty' || field === 'price') ? num(val) : val;
+  if (field === 'qty' || field === 'price') {
+    const cell = document.getElementById('amt' + i);
+    if (cell) cell.textContent = money(itemAmount(curItems[i]));
+    recalcTotals();
+  }
+}
+function renderItems() {
+  const head = '<thead><tr><th class="ctr" style="width:34px">ที่</th><th style="min-width:170px">ชนิดยา/เวชภัณฑ์</th>' +
+    '<th style="width:110px">ความเข้มข้น/ขนาดบรรจุ</th><th style="width:76px">หน่วย</th>' +
+    '<th class="num" style="width:80px">จำนวน</th><th class="num" style="width:100px">ราคา/หน่วย</th>' +
+    '<th class="num" style="width:96px">จำนวนเงิน</th><th style="min-width:110px">หมายเหตุ</th>' +
+    '<th class="ctr" style="width:44px">ลบ</th></tr></thead>';
+  const body = curItems.map((it, i) =>
+    '<tr>' +
+    '<td class="ctr">' + (i+1) + '</td>' +
+    '<td><input value="' + esc(it.name) + '" oninput="updItem(' + i + ',\'name\',this.value)">' +
+      (it.ctrl && it.ctrl !== 'ทั่วไป' ? '<div style="margin-top:3px"><span class="chip ctrl">' + esc(it.ctrl) + '</span></div>' : '') + '</td>' +
+    '<td><input value="' + esc(it.strength) + '" oninput="updItem(' + i + ',\'strength\',this.value)"></td>' +
+    '<td><input value="' + esc(it.unit) + '" oninput="updItem(' + i + ',\'unit\',this.value)"></td>' +
+    '<td class="num"><input type="number" step="0.01" min="0" value="' + num(it.qty) + '" oninput="updItem(' + i + ',\'qty\',this.value)"></td>' +
+    '<td class="num"><input type="number" step="0.01" min="0" value="' + num(it.price) + '" oninput="updItem(' + i + ',\'price\',this.value)"></td>' +
+    '<td class="num" id="amt' + i + '">' + money(itemAmount(it)) + '</td>' +
+    '<td><input value="' + esc(it.note) + '" oninput="updItem(' + i + ',\'note\',this.value)"></td>' +
+    '<td class="ctr"><button class="btn ghost sm" onclick="delItem(' + i + ')">🗑️</button></td>' +
+    '</tr>').join('');
+  $('fItems').innerHTML = head + '<tbody>' + (body ||
+    '<tr><td colspan="9" class="ctr muted" style="padding:16px">ยังไม่มีรายการยา — เพิ่มจากบัญชียา หรือเพิ่มรายการว่าง</td></tr>') + '</tbody>';
+}
+function recalcTotals() {
+  const t = curItems.reduce((s, it) => s + itemAmount(it), 0) + num($('fFee').value);
+  $('fTotal').value = money(t) + ' บาท';
+}
+function syncDue() {
+  const q = $('fQuoteDate').value, p = $('fPaidDate').value;
+  $('fPayDue').value = q ? thaiDate(addDays(q, db.settings.payDays)) : '';
+  $('fBuyDue').value = p ? thaiDate(addDays(p, db.settings.buyDays)) : '';
+  renderFormAlerts();
+}
+function onFormDateChange() { checkLead(); }
+function checkLead() {
+  renderFormAlerts();
+}
+function renderFormAlerts() {
+  const out = [];
+  const date = $('fDate').value, start = $('fStartUse').value;
+  if (date && start) {
+    const lead = dayDiff(date, start);
+    if (lead < 0) out.push({ t:'err', h:'วันที่เริ่มใช้ยาอยู่ก่อนวันยื่นคำขอ — ตรวจสอบวันที่อีกครั้ง' });
+    else if (lead < num(db.settings.leadDays))
+      out.push({ t:'warn', h:'ยื่นคำขอล่วงหน้าเพียง <b>' + lead + ' วัน</b> ซึ่งน้อยกว่าที่ SOP 6.1 กำหนด (' +
+        db.settings.leadDays + ' วัน) — ระบุเหตุผลไว้ในช่องหมายเหตุ และแจ้งผู้ขอซื้อว่าอาจได้รับยาไม่ทัน' });
+  }
+  const r = cur;
+  if (r && r.status === 'quoted' && r.quote.date) {
+    const due = addDays(r.quote.date, db.settings.payDays);
+    const left = dayDiff(todayIso(), due);
+    if (left < 0) out.push({ t:'err', h:'<b>เกินกำหนดชำระเงินแล้ว ' + (-left) + ' วัน</b> — ตาม SOP 6.4 ผู้ขอซื้อต้องยื่นเรื่องขอซื้อยาใหม่อีกครั้ง' });
+    else out.push({ t:'info', h:'ครบกำหนดชำระเงินวันที่ <b>' + thaiDate(due) + '</b> (เหลืออีก ' + left + ' วัน)' });
+  }
+  if (r && r.status === 'paid' && r.pay.date) {
+    const due = addDays(r.pay.date, db.settings.buyDays);
+    const left = dayDiff(todayIso(), due);
+    out.push({ t: left < 0 ? 'err' : 'info',
+      h: left < 0 ? '<b>เกินกำหนดจัดซื้อแล้ว ' + (-left) + ' วัน</b> — SOP 6.3 กำหนดให้ซื้อยาภายใน ' + db.settings.buyDays + ' วันหลังชำระเงิน'
+                  : 'ต้องดำเนินการจัดซื้อภายในวันที่ <b>' + thaiDate(due) + '</b> (เหลืออีก ' + left + ' วัน)' });
+  }
+  if (curItems.some(it => it.ctrl && it.ctrl !== 'ทั่วไป' && it.ctrl !== 'ยาอันตราย'))
+    out.push({ t:'warn', h:'คำขอนี้มี<b>ยาควบคุมพิเศษ / วัตถุออกฤทธิ์ / ยาเสพติดให้โทษ</b> — ต้องแนบสำเนาใบอนุญาตใช้สัตว์ทดลอง สำเนาบัตรประชาชน และแบบคำขอตามกฎหมายให้ครบ พร้อมบันทึกการจ่ายยาแยกตามระเบียบ' });
+  $('fAlerts').innerHTML = out.map(a => '<div class="alert ' + a.t + '">' + a.h + '</div>').join('');
+}
+function renderFlow() {
+  const r = cur;
+  const st = r.status;
+  if (st === 'cancelled' || st === 'expired') {
+    $('fFlow').innerHTML = '<span class="chip ' + st + '">' + STATUS[st].label + '</span>' +
+      (r.cancelReason ? '<span class="muted" style="margin-left:8px">เหตุผล: ' + esc(r.cancelReason) + '</span>' : '');
+    $('btnCancel').disabled = true;
+    return;
+  }
+  const idx = FLOW_STEPS.indexOf(st);
+  $('fFlow').innerHTML = FLOW_STEPS.map((s, i) => {
+    const cls = i < idx ? 'done' : (i === idx ? 'now' : '');
+    return '<span class="step ' + cls + '">' + (i+1) + '. ' + STATUS[s].label + '</span>';
+  }).join('<span class="arrow">→</span>');
+  const lockAt = STATUS[db.settings.lockCancel].order;
+  $('btnCancel').disabled = STATUS[st].order >= lockAt;
+}
+function renderHistory() {
+  const h = (cur.history || []);
+  $('fHistory').innerHTML = '<thead><tr><th style="width:150px">เมื่อ</th><th>เหตุการณ์</th><th>หมายเหตุ</th></tr></thead><tbody>' +
+    (h.length ? h.slice().reverse().map(e =>
+      '<tr><td>' + esc(e.t) + '</td><td>' + esc(e.what) + '</td><td>' + esc(e.note || '') + '</td></tr>').join('')
+     : '<tr><td colspan="3" class="ctr muted" style="padding:14px">ยังไม่มีประวัติ</td></tr>') + '</tbody>';
+}
+function logHistory(what, note) {
+  const d = new Date();
+  cur.history = cur.history || [];
+  cur.history.push({
+    t: thaiDate(todayIso()) + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'),
+    what: what, note: note || ''
+  });
+}
+function autofillResearcher() {
+  const name = $('fReqName').value.trim();
+  if (!name) return;
+  const prev = db.requests.slice().reverse().find(r => r.req.name === name);
+  if (!prev) return;
+  if (!$('fReqOrg').value) $('fReqOrg').value = prev.req.org;
+  if (!$('fReqTax').value) $('fReqTax').value = prev.req.tax;
+  if (!$('fReqPhone').value) $('fReqPhone').value = prev.req.phone;
+  if (!$('fReqEmail').value) $('fReqEmail').value = prev.req.email;
+  if (!$('fReqBill').value) $('fReqBill').value = prev.req.bill;
+  if (!$('fReqAddr').value) $('fReqAddr').value = prev.req.addr;
+  if (!$('fReqLicense').value) $('fReqLicense').value = prev.req.license;
+}
+function fillDatalists() {
+  const names = Array.from(new Set(db.requests.map(r => r.req.name).filter(Boolean)));
+  $('dlResearchers').innerHTML = names.map(n => '<option value="' + esc(n) + '">').join('');
+  const vendors = Array.from(new Set([db.settings.vendor].concat(
+    db.requests.map(r => r.vendor), db.drugs.map(d => d.vendor)).filter(Boolean)));
+  $('dlVendors').innerHTML = vendors.map(v => '<option value="' + esc(v) + '">').join('');
+}
+
+/* ---------------- ตรวจความครบถ้วน / บันทึก ---------------- */
+function validateRequest(r, forStatus) {
+  const e = [];
+  if (!r.req.name) e.push('ชื่อนักวิจัยผู้สั่งซื้อยา');
+  if (!r.req.org) e.push('หน่วยงาน/คณะ/ภาควิชา');
+  if (!r.req.phone) e.push('เบอร์โทรที่ติดต่อได้');
+  if (!r.req.email) e.push('E-mail (ใช้แจ้งค่าใช้จ่ายตาม SOP 6.2)');
+  if (!r.req.license) e.push('เลขที่ใบอนุญาตใช้สัตว์ทดลอง');
+  if (!r.startUse) e.push('วันที่เริ่มใช้ยา');
+  if (!r.items.length) e.push('รายการชนิดยาและจำนวน');
+  if (r.items.some(it => !it.name)) e.push('ชื่อยาในทุกบรรทัดของรายการ');
+  if (forStatus === 'quoted') {
+    if (!r.quote.date) e.push('วันที่แจ้งค่าใช้จ่าย');
+    if (r.items.some(it => !num(it.price))) e.push('ราคาต่อหน่วยของทุกรายการ');
+  }
+  if (forStatus === 'paid' && !r.pay.date) e.push('วันที่ชำระเงิน');
+  if (forStatus === 'ordered' && !r.order.date) e.push('วันที่สั่งซื้อ');
+  if (forStatus === 'received') {
+    if (!r.recv.date) e.push('วันที่ผู้ขอซื้อรับยา');
+    if (r.recv.checked === 'no') e.push('ผลการตรวจสอบชนิด ความเข้มข้น และจำนวน (SOP 6.7)');
+  }
+  return e;
+}
+async function saveRequest(silent) {
+  const r = collectForm();
+  if (!r.req.name) { toast('กรอกชื่อนักวิจัยผู้สั่งซื้อยาก่อนบันทึก'); return false; }
+  if (!r.no) {
+    r.no = await allocateNo(r.date);
+    r.createdAt = new Date().toISOString();
+    logHistory('สร้างคำขอ เลขที่ ' + r.no);
+  }
+  r.updatedAt = new Date().toISOString();
+  const i = db.requests.findIndex(x => x.id === r.id);
+  if (i >= 0) db.requests[i] = r; else db.requests.push(r);
+  save();
+  cloudPushRequest(r);
+  $('fNo').value = r.no; $('fNoLabel').textContent = 'เลขที่ ' + r.no;
+  fillDatalists(); renderList(); renderDash(); renderHistory();
+  if (!silent) toast('บันทึกคำขอเลขที่ ' + r.no + ' แล้ว');
+  return true;
+}
+async function advance(to) {
+  const r = collectForm();
+  const errs = validateRequest(r, to);
+  if (errs.length) {
+    alert('ยังกรอกข้อมูลไม่ครบสำหรับขั้นตอนนี้:\n· ' + errs.join('\n· '));
+    return;
+  }
+  if (to === 'received' && !r.recv.code) {
+    r.recv.code = receiptCode(r.recv.date);
+    $('fRecvCode').value = r.recv.code;
+  }
+  if (to === 'quoted' && !r.quote.to) { r.quote.to = r.req.email; $('fQuoteTo').value = r.quote.to; }
+  if (STATUS[r.status].order > STATUS[to].order &&
+      !confirm('คำขออยู่ในขั้น “' + STATUS[r.status].label + '” อยู่แล้ว\nต้องการย้อนกลับไปขั้น “' + STATUS[to].label + '” หรือไม่?')) return;
+  const from = r.status;
+  r.status = to;
+  logHistory('เปลี่ยนสถานะ: ' + STATUS[from].label + ' → ' + STATUS[to].label);
+  if (to === 'received' && r.recv.checked === 'bad')
+    logHistory('ตรวจรับพบความไม่ถูกต้อง', r.recv.note);
+  cur = r;
+  if (await saveRequest(true)) {
+    $('fStatusLabel').value = STATUS[to].label;
+    renderFlow(); renderFormAlerts(); renderHistory();
+    toast('บันทึกขั้นตอน “' + STATUS[to].label + '” แล้ว');
+  }
+}
+async function markExpired() {
+  const r = collectForm();
+  if (r.status !== 'quoted') { toast('ใช้ได้เฉพาะคำขอที่อยู่ในขั้นรอชำระเงิน'); return; }
+  if (!confirm('บันทึกว่าคำขอนี้เกินกำหนดชำระเงิน?\nตาม SOP 6.4 ผู้ขอซื้อจะต้องยื่นเรื่องขอซื้อยาใหม่อีกครั้ง')) return;
+  r.status = 'expired';
+  r.cancelReason = 'ไม่ชำระเงินภายใน ' + db.settings.payDays + ' วัน (SOP 6.4)';
+  logHistory('เกินกำหนดชำระเงิน — ต้องยื่นคำขอใหม่', r.cancelReason);
+  cur = r; await saveRequest(true);
+  $('fStatusLabel').value = STATUS.expired.label;
+  renderFlow(); renderFormAlerts(); renderHistory();
+  toast('บันทึกเป็นคำขอที่เกินกำหนดชำระแล้ว');
+}
+async function cancelRequest() {
+  const r = collectForm();
+  const lockAt = STATUS[db.settings.lockCancel].order;
+  if (STATUS[r.status].order >= lockAt) {
+    alert('ไม่สามารถยกเลิกได้\nSOP 6.5 — เมื่อผู้ขอซื้อชำระเงินและสัตวแพทย์ดำเนินการซื้อยาแล้ว ไม่สามารถยกเลิกการขอสั่งซื้อยาได้ในทุกกรณี');
+    return;
+  }
+  const why = prompt('เหตุผลการยกเลิกคำขอ:', '');
+  if (why === null) return;
+  r.status = 'cancelled'; r.cancelReason = why.trim();
+  logHistory('ยกเลิกคำขอ', r.cancelReason);
+  cur = r; await saveRequest(true);
+  $('fStatusLabel').value = STATUS.cancelled.label;
+  renderFlow(); renderFormAlerts(); renderHistory();
+  toast('ยกเลิกคำขอแล้ว');
+}
+function loadRequest(id) {
+  const r = db.requests.find(x => x.id === id);
+  if (!r) return;
+  cur = JSON.parse(JSON.stringify(r));
+  fillForm(); showTab('form');
+}
+function duplicateRequest(id) {
+  const r = db.requests.find(x => x.id === id);
+  if (!r) return;
+  const c = JSON.parse(JSON.stringify(r));
+  c.id = uid(); c.no = ''; c.date = todayIso(); c.status = 'draft';
+  c.quote = { date:'', to:'', due:'' }; c.pay = { date:'', ref:'', buyDue:'' };
+  c.order = { date:'', receiptNo:'', receiptDate:'' };
+  c.recv = { date:'', by:'', code:'', checked:'no', receiptGot:'no', note:'' };
+  c.cancelReason = ''; c.history = [];
+  cur = c; fillForm(); showTab('form');
+  toast('คัดลอกคำขอแล้ว — ตรวจสอบวันที่และราคาก่อนบันทึก');
+}
+function deleteRequest(id) {
+  const r = db.requests.find(x => x.id === id);
+  if (!r) return;
+  if (!confirm('ลบคำขอเลขที่ ' + (r.no || '(ร่าง)') + ' ออกจากทะเบียน?\n' +
+               'เอกสารตาม SOP ข้อ 8 ต้องจัดเก็บ ' + db.settings.retention + ' ปี — ลบเฉพาะรายการที่บันทึกผิดพลาดเท่านั้น')) return;
+  db.requests = db.requests.filter(x => x.id !== id);
+  save(); cloudRemoveRequest(id); renderList(); renderDash();
+  if (cur && cur.id === id) newRequest();
+  toast('ลบคำขอแล้ว');
+}
+function mailQuote() {
+  const r = collectForm();
+  if (!r.req.email) { toast('กรอกอีเมลผู้ขอซื้อก่อน'); return; }
+  const due = r.quote.date ? addDays(r.quote.date, db.settings.payDays) : addDays(todayIso(), db.settings.payDays);
+  const lines = [
+    'เรียน ' + r.req.name,
+    '',
+    'ตามที่ท่านได้ยื่นคำขอซื้อยาและเวชภัณฑ์เพื่อใช้ในงานวิจัย เลขที่ ' + (r.no || '(รอออกเลขที่)') +
+      ' ลงวันที่ ' + thaiDate(r.date) + ' นั้น',
+    'ศูนย์บริการสัตว์ทดลองได้ประสานสถานที่จำหน่ายเรียบร้อยแล้ว จึงขอแจ้งค่าใช้จ่ายดังนี้',
+    ''
+  ].concat(r.items.map((it, i) =>
+    (i+1) + '. ' + it.name + (it.strength ? ' (' + it.strength + ')' : '') +
+    ' จำนวน ' + num(it.qty) + ' ' + (it.unit || '') +
+    ' ราคาหน่วยละ ' + money(it.price) + ' บาท เป็นเงิน ' + money(itemAmount(it)) + ' บาท'
+  )).concat([
+    num(r.fee) ? 'ค่าดำเนินการ ' + money(r.fee) + ' บาท' : '',
+    '',
+    'รวมค่าใช้จ่ายทั้งสิ้น ' + money(r.total) + ' บาท (' + bahtText(r.total) + ')',
+    '',
+    'ข้อปฏิบัติ',
+    '1. โปรดชำระเงินภายใน ' + db.settings.payDays + ' วัน คือภายในวันที่ ' + thaiDate(due) +
+      ' หากเกินกำหนดกรุณายื่นใบขอซื้อยาใหม่อีกครั้ง (SOP 6.4)',
+    '2. ห้ามนำยาออกนอกเรือนเลี้ยงสัตว์ทดลองโดยเด็ดขาด',
+    '3. ขวดยาและเข็มฉีดยา กรุณาทิ้งในที่ที่จัดให้เท่านั้น',
+    '4. ห้ามให้บุคคลภายนอกที่ไม่เกี่ยวข้องใช้ยาโดยไม่ได้รับอนุญาตจากสัตวแพทย์',
+    '5. การผสมยาให้ปฏิบัติตามหลักความปลอดภัยทางชีวภาพอย่างเคร่งครัด',
+    '6. สามารถรับใบเสร็จรับเงินได้ภายใน ' + db.settings.receiptDays + ' วัน',
+    '',
+    'ทั้งนี้ เมื่อชำระเงินแล้ว ศูนย์ฯ จะดำเนินการจัดซื้อภายใน ' + db.settings.buyDays + ' วัน',
+    'และไม่สามารถยกเลิกคำขอได้หลังจากดำเนินการซื้อยาแล้วในทุกกรณี (SOP 6.5)',
+    '',
+    'ขอแสดงความนับถือ',
+    db.settings.vetName,
+    'สัตวแพทย์ประจำ ' + db.settings.orgTh
+  ]).filter(x => x !== '');
+  const subject = 'แจ้งค่าใช้จ่ายการขอซื้อยาและเวชภัณฑ์ เลขที่ ' + (r.no || '') + ' — ศูนย์บริการสัตว์ทดลอง ม.อ.';
+  const url = 'mailto:' + encodeURIComponent(r.req.email) +
+    '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(lines.join('\n'));
+  window.location.href = url;
+  toast('เปิดโปรแกรมอีเมลพร้อมร่างข้อความแล้ว');
+}
+
+/* ================= ทะเบียนคำขอ ================= */
+function dueInfo(r) {
+  if (r.status === 'quoted' && r.quote.date) {
+    const due = addDays(r.quote.date, db.settings.payDays);
+    return { due: due, left: dayDiff(todayIso(), due), what: 'ครบกำหนดชำระ' };
+  }
+  if (r.status === 'paid' && r.pay.date) {
+    const due = addDays(r.pay.date, db.settings.buyDays);
+    return { due: due, left: dayDiff(todayIso(), due), what: 'ครบกำหนดจัดซื้อ' };
+  }
+  if (r.status === 'ordered') return { due:'', left: null, what: 'รอผู้ขอซื้อมารับยา' };
+  if (r.status === 'submitted') return { due:'', left: null, what: 'รอแจ้งค่าใช้จ่าย' };
+  return { due:'', left: null, what: '' };
+}
+function isOpen(r) { return ['submitted','quoted','paid','ordered'].includes(r.status); }
+function renderList() {
+  const q = ($('qSearch').value || '').trim().toLowerCase();
+  const st = $('qStatus').value, yr = $('qYear').value, sort = $('qSort').value;
+  let rows = db.requests.filter(r => {
+    if (st === 'open' ? !isOpen(r) : (st && r.status !== st)) return false;
+    if (yr && yearToken(r.date) !== yr && String(+String(r.date).slice(0,4) + 543) !== yr) return false;
+    if (!q) return true;
+    const hay = [r.no, r.req.name, r.req.org, r.study.no, r.study.title,
+      (r.items || []).map(i => i.name).join(' ')].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  rows.sort((a, b) => {
+    if (sort === 'old') return (a.date + a.no).localeCompare(b.date + b.no);
+    if (sort === 'due') {
+      const da = dueInfo(a).due || '9999-12-31', dbb = dueInfo(b).due || '9999-12-31';
+      return da.localeCompare(dbb);
+    }
+    return (b.date + b.no).localeCompare(a.date + a.no);
+  });
+  const head = '<thead><tr><th>เลขที่</th><th>วันที่ยื่น</th><th>ผู้ขอซื้อ / หน่วยงาน</th>' +
+    '<th>รายการยา</th><th class="num">รวม (บาท)</th><th>สถานะ</th><th>กำหนดถัดไป</th>' +
+    '<th class="ctr" style="width:170px">จัดการ</th></tr></thead>';
+  const body = rows.map(r => {
+    const d = dueInfo(r);
+    let dueTxt = d.what || '-';
+    if (d.due) {
+      const cls = d.left < 0 ? 'expired' : (d.left <= 2 ? 'quoted' : 'submitted');
+      dueTxt = d.what + ' ' + thaiDate(d.due) + ' <span class="chip ' + cls + '">' +
+        (d.left < 0 ? 'เลย ' + (-d.left) + ' วัน' : 'อีก ' + d.left + ' วัน') + '</span>';
+    }
+    const names = (r.items || []).map(i => i.name).filter(Boolean);
+    return '<tr>' +
+      '<td><b>' + esc(r.no || '(ร่าง)') + '</b>' + (r.recv && r.recv.code ? '<br><span class="muted" style="font-size:11.5px">' + esc(r.recv.code) + '</span>' : '') + '</td>' +
+      '<td>' + esc(thaiDate(r.date)) + '</td>' +
+      '<td>' + esc(r.req.name) + '<br><span class="muted" style="font-size:12px">' + esc(r.req.org) + '</span></td>' +
+      '<td>' + esc(names.slice(0,2).join(', ')) + (names.length > 2 ? ' และอีก ' + (names.length-2) + ' รายการ' : '') + '</td>' +
+      '<td class="num">' + money(r.total) + '</td>' +
+      '<td><span class="chip ' + r.status + '">' + STATUS[r.status].label + '</span></td>' +
+      '<td>' + dueTxt + '</td>' +
+      '<td class="ctr">' +
+        '<button class="btn secondary sm" onclick="loadRequest(\'' + r.id + '\')">เปิด</button> ' +
+        '<button class="btn ghost sm" onclick="printSaved(\'' + r.id + '\')">🖨️</button> ' +
+        '<button class="btn ghost sm" onclick="duplicateRequest(\'' + r.id + '\')">📄</button> ' +
+        '<button class="btn ghost sm" onclick="deleteRequest(\'' + r.id + '\')">🗑️</button>' +
+      '</td></tr>';
+  }).join('');
+  $('listTable').innerHTML = head + '<tbody>' + (body ||
+    '<tr><td colspan="8" class="ctr muted" style="padding:20px">ไม่พบคำขอที่ตรงกับเงื่อนไข</td></tr>') + '</tbody>';
+  const sum = rows.reduce((s, r) => s + num(r.total), 0);
+  $('listSummary').innerHTML = 'แสดง <b>' + rows.length + '</b> จากทั้งหมด ' + db.requests.length +
+    ' คำขอ · มูลค่ารวม <b>' + money(sum) + '</b> บาท';
+  fillYearFilter();
+}
+function fillYearFilter() {
+  const sel = $('qYear'); const keep = sel.value;
+  const years = Array.from(new Set(db.requests.map(r => yearToken(r.date)))).sort().reverse();
+  sel.innerHTML = '<option value="">ทุกปี</option>' + years.map(y => '<option>' + esc(y) + '</option>').join('');
+  sel.value = keep;
+}
+
+/* ================= แดชบอร์ด ================= */
+function renderDash() {
+  const today = todayIso();
+  const overduePay = [], overdueBuy = [], waitQuote = [], waitPickup = [], lateLead = [];
+  db.requests.forEach(r => {
+    if (r.status === 'quoted' && r.quote.date && dayDiff(today, addDays(r.quote.date, db.settings.payDays)) < 0) overduePay.push(r);
+    if (r.status === 'paid' && r.pay.date && dayDiff(today, addDays(r.pay.date, db.settings.buyDays)) < 0) overdueBuy.push(r);
+    if (r.status === 'submitted') waitQuote.push(r);
+    if (r.status === 'ordered') waitPickup.push(r);
+    if (isOpen(r) && r.startUse && dayDiff(today, r.startUse) < 0 && r.status !== 'ordered') lateLead.push(r);
+  });
+  const expired = db.drugs.filter(d => drugExpiryState(d) === 'expired');
+  const soon = db.drugs.filter(d => drugExpiryState(d) === 'soon');
+  const low = db.drugs.filter(d => num(d.stock) > 0 && num(d.stock) <= num(db.settings.reorder));
+
+  const alerts = [];
+  if (overduePay.length) alerts.push({ t:'err', h:'<b>เกินกำหนดชำระเงิน ' + overduePay.length + ' คำขอ</b> — ตาม SOP 6.4 ต้องแจ้งผู้ขอซื้อให้ยื่นเรื่องใหม่' +
+    '<ul>' + overduePay.map(r => '<li>' + esc(r.no) + ' · ' + esc(r.req.name) + ' · ครบกำหนด ' + thaiDate(addDays(r.quote.date, db.settings.payDays)) + '</li>').join('') + '</ul>' });
+  if (overdueBuy.length) alerts.push({ t:'err', h:'<b>เกินกำหนดจัดซื้อ ' + overdueBuy.length + ' คำขอ</b> — SOP 6.3 กำหนดให้ซื้อยาภายใน ' + db.settings.buyDays + ' วันหลังผู้ขอซื้อชำระเงิน' +
+    '<ul>' + overdueBuy.map(r => '<li>' + esc(r.no) + ' · ' + esc(r.req.name) + ' · ชำระเมื่อ ' + thaiDate(r.pay.date) + '</li>').join('') + '</ul>' });
+  if (lateLead.length) alerts.push({ t:'warn', h:'<b>เลยวันที่เริ่มใช้ยาแล้วแต่ยังไม่ส่งมอบ ' + lateLead.length + ' คำขอ</b> — ติดต่อผู้ขอซื้อเพื่อยืนยันแผนการทดลอง' });
+  if (expired.length) alerts.push({ t:'err', h:'<b>ยาหมดอายุในคลัง ' + expired.length + ' รายการ</b> — ' +
+    esc(expired.map(d => d.name).join(', ')) + ' · ต้องแยกออกจากคลังและทำลายตามระเบียบ' });
+  if (soon.length) alerts.push({ t:'warn', h:'<b>ยาใกล้หมดอายุภายใน ' + db.settings.expDays + ' วัน ' + soon.length + ' รายการ</b> — ' +
+    esc(soon.map(d => d.name + ' (' + thaiDate(d.expiry) + ')').join(', ')) + ' · พิจารณาใช้ราคาขายเพื่อป้องกันยาหมดอายุ' });
+  if (low.length) alerts.push({ t:'info', h:'<b>คงเหลือต่ำกว่าจุดสั่งซื้อ ' + low.length + ' รายการ</b> — ' + esc(low.map(d => d.name).join(', ')) });
+  if (!alerts.length) alerts.push({ t:'ok', h:'✅ ไม่มีรายการค้างที่เกินกำหนด และไม่มียาหมดอายุหรือใกล้หมดอายุในคลัง' });
+  $('dashAlerts').innerHTML = alerts.map(a => '<div class="alert ' + a.t + '">' + a.h + '</div>').join('');
+
+  const openCount = db.requests.filter(isOpen).length;
+  const doneYear = db.requests.filter(r => r.status === 'received' && yearToken(r.date) === yearToken(todayIso())).length;
+  const valueYear = db.requests.filter(r => r.status === 'received' && yearToken(r.date) === yearToken(todayIso()))
+    .reduce((s, r) => s + num(r.total), 0);
+  $('dashStats').innerHTML = [
+    { k:'คำขอที่ยังไม่ปิดงาน', v:openCount, c:'' },
+    { k:'รอแจ้งค่าใช้จ่าย', v:waitQuote.length, c:'blue' },
+    { k:'รอผู้ขอซื้อชำระเงิน', v:db.requests.filter(r => r.status === 'quoted').length, c:'warn' },
+    { k:'รอมารับยา', v:waitPickup.length, c:'blue' },
+    { k:'เกินกำหนด', v:overduePay.length + overdueBuy.length, c:'err' },
+    { k:'ปิดงานแล้วปีนี้', v:doneYear, c:'' },
+    { k:'มูลค่ารวมปีนี้ (บาท)', v:money(valueYear), c:'' }
+  ].map(s => '<div class="stat ' + s.c + '"><div class="v">' + s.v + '</div><div class="k">' + s.k + '</div></div>').join('');
+
+  const todo = db.requests.filter(isOpen).map(r => ({ r:r, d:dueInfo(r) }))
+    .sort((a, b) => (a.d.due || '9999-12-31').localeCompare(b.d.due || '9999-12-31'));
+  $('dashTodo').innerHTML = '<thead><tr><th>เลขที่</th><th>ผู้ขอซื้อ</th><th>สถานะ</th><th>สิ่งที่ต้องทำ</th><th class="ctr">เปิด</th></tr></thead><tbody>' +
+    (todo.length ? todo.map(x => {
+      const late = x.d.left != null && x.d.left < 0;
+      return '<tr><td><b>' + esc(x.r.no) + '</b></td><td>' + esc(x.r.req.name) + '</td>' +
+        '<td><span class="chip ' + x.r.status + '">' + STATUS[x.r.status].label + '</span></td>' +
+        '<td>' + esc(nextAction(x.r)) + (x.d.due ? ' <span class="chip ' + (late ? 'expired' : 'submitted') + '">' +
+          (late ? 'เลยกำหนด ' + (-x.d.left) + ' วัน' : 'ภายใน ' + thaiDate(x.d.due)) + '</span>' : '') + '</td>' +
+        '<td class="ctr"><button class="btn secondary sm" onclick="loadRequest(\'' + x.r.id + '\')">เปิด</button></td></tr>';
+    }).join('') : '<tr><td colspan="5" class="ctr muted" style="padding:18px">ไม่มีคำขอค้างดำเนินการ</td></tr>') + '</tbody>';
+
+  const watch = expired.concat(soon).concat(low.filter(d => !expired.includes(d) && !soon.includes(d)));
+  $('dashDrugs').innerHTML = '<thead><tr><th>ชื่อยา</th><th>คงเหลือ</th><th>วันหมดอายุ</th><th>สถานะ</th></tr></thead><tbody>' +
+    (watch.length ? watch.map(d => {
+      const st = drugExpiryState(d);
+      const tag = st === 'expired' ? '<span class="chip expired">หมดอายุแล้ว</span>'
+                : st === 'soon' ? '<span class="chip quoted">ใกล้หมดอายุ</span>'
+                : '<span class="chip stock">คงเหลือต่ำ</span>';
+      return '<tr><td>' + esc(d.name) + '</td><td>' + num(d.stock) + ' ' + esc(d.unit) + '</td>' +
+        '<td>' + (d.expiry ? esc(thaiDate(d.expiry)) : '-') + '</td><td>' + tag + '</td></tr>';
+    }).join('') : '<tr><td colspan="4" class="ctr muted" style="padding:18px">ไม่มีรายการที่ต้องเฝ้าระวัง</td></tr>') + '</tbody>';
+
+  const badge = overduePay.length + overdueBuy.length;
+  $('badgeDash').textContent = badge; $('badgeDash').classList.toggle('zero', badge === 0);
+  const dbadge = expired.length + soon.length;
+  $('badgeDrug').textContent = dbadge; $('badgeDrug').classList.toggle('zero', dbadge === 0);
+}
+function nextAction(r) {
+  switch (r.status) {
+    case 'submitted': return 'ประสานสถานที่จำหน่าย และส่งใบแจ้งค่าใช้จ่ายทางอีเมล (SOP 6.2)';
+    case 'quoted':    return 'ติดตามการชำระเงินจากผู้ขอซื้อ (SOP 6.2, 6.4)';
+    case 'paid':      return 'ดำเนินการจัดซื้อยาตามที่ผู้ขอซื้อระบุ (SOP 6.3)';
+    case 'ordered':   return 'เตรียมยาพร้อมระบุชื่อผู้ขอซื้อ และนัดหมายให้มาตรวจรับ (SOP 6.7)';
+    default: return '';
+  }
+}
+
+/* ================= หน้าอธิบาย SOP ================= */
+function renderSop() {
+  const s = db.settings;
+  const rows = [
+    ['6.1', 'ผู้ขอซื้อยากรอกข้อมูลให้ครบถ้วนในใบขอซื้อยาของศูนย์บริการสัตว์ทดลอง ก่อนวันเริ่มใช้ยาอย่างน้อย ' + s.leadDays + ' วัน',
+      'ระบบตรวจระยะห่างระหว่าง “วันที่ยื่นคำขอ” กับ “วันที่เริ่มใช้ยา” และเตือนทันทีเมื่อน้อยกว่าเกณฑ์'],
+    ['6.2', 'สัตวแพทย์ติดต่อประสานสถานที่จำหน่าย แจ้งราคาตามข้อมูลของผู้ขอซื้อ และส่งใบแจ้งค่าใช้จ่ายทางอีเมล เพื่อให้ชำระเงินภายใน ' + s.payDays + ' วัน',
+      'ปุ่ม “ร่างอีเมลแจ้งราคา” สร้างข้อความพร้อมรายการและข้อปฏิบัติ · ระบบคำนวณวันครบกำหนดชำระอัตโนมัติ'],
+    ['6.3', 'เมื่อชำระเงินแล้ว สัตวแพทย์จะซื้อยาตามที่ผู้ขอซื้อให้ข้อมูล ภายใน ' + s.buyDays + ' วันหลังชำระเงิน',
+      'บันทึกวันที่ชำระแล้วระบบตั้งกำหนดจัดซื้อให้ และขึ้นเตือนสีแดงบนแดชบอร์ดเมื่อเลยกำหนด'],
+    ['6.4', 'กรณีผู้ขอซื้อไม่สามารถชำระเงินได้ภายใน ' + s.payDays + ' วัน จะต้องยื่นเรื่องขอซื้อยาใหม่อีกครั้ง',
+      'ปุ่ม “เกินกำหนดชำระ” เปลี่ยนสถานะคำขอเป็น “เกินกำหนดชำระ” และบันทึกเหตุผลไว้ในประวัติ'],
+    ['6.5', 'ไม่สามารถยกเลิกการขอสั่งซื้อยาหลังจากผู้ขอซื้อชำระเงินและสัตวแพทย์ทำการซื้อยาแล้ว ในทุกกรณี',
+      'ระบบปิดปุ่ม “ยกเลิกคำขอ” ตั้งแต่สถานะ “' + STATUS[s.lockCancel].label + '” เป็นต้นไป'],
+    ['6.6', 'สถานที่จำหน่ายยาเป็นผู้ออกใบเสร็จหรือใบกำกับภาษี ผู้ขอซื้อโปรดระบุที่อยู่และเลขประจำตัวผู้เสียภาษีให้ถูกต้อง',
+      'ฟอร์มมีช่องเลขประจำตัวผู้เสียภาษี ชื่อออกบิล และที่อยู่ พร้อมพิมพ์ลงในใบแจ้งค่าใช้จ่ายและแบบบันทึกการรับยา'],
+    ['6.7', 'เมื่อได้รับยาและเวชภัณฑ์แล้ว ตรวจสอบชนิด ความเข้มข้น และจำนวนให้ถูกต้อง พร้อมเซ็นรับทราบในแบบบันทึกการรับยา',
+      'ต้องเลือกผลการตรวจสอบก่อนจึงจะปิดงานได้ · ระบบออกรหัสเอกสารแบบบันทึกการรับยาให้อัตโนมัติ']
+  ];
+  $('sopTable').innerHTML = '<thead><tr><th style="width:44px">ข้อ</th><th>ข้อกำหนดตาม SOP</th><th>การบังคับใช้ในระบบนี้</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td><b>' + r[0] + '</b></td><td>' + esc(r[1]) + '</td><td>' + esc(r[2]) + '</td></tr>').join('') + '</tbody>';
+
+  const docs = [
+    ['Med101', 'บันทึกการขอซื้อยาในเรือนเลี้ยงสัตว์ทดลอง'],
+    ['Med102', 'ใบแจ้งค่าใช้จ่ายการขอซื้อยาที่เรือนเลี้ยงสัตว์ทดลอง'],
+    ['Med103', 'แบบบันทึกการรับยาและเวชภัณฑ์']
+  ];
+  $('sopDocTable').innerHTML = '<thead><tr><th>รหัสเอกสาร</th><th>รายการ</th><th class="ctr">อายุการจัดเก็บ (ปี)</th><th>สถานที่จัดเก็บ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody>' +
+    docs.map(d => '<tr><td><b>' + d[0] + '</b></td><td>' + esc(d[1]) + '</td><td class="ctr">' + s.retention +
+      '</td><td>เรือนเลี้ยงสัตว์ทดลอง</td><td>' + esc(s.vetName || 'สัตวแพทย์ประจำ') + '</td></tr>').join('') + '</tbody>';
+
+  $('sopTerms').innerHTML = '<thead><tr><th style="width:44px">ข้อ</th><th>ข้อปฏิบัติ</th></tr></thead><tbody>' +
+    quoteTerms().map((t, i) => '<tr><td class="ctr">' + (i+1) + '</td><td>' + esc(t) + '</td></tr>').join('') + '</tbody>';
+}
+function quoteTerms() {
+  const s = db.settings;
+  return [
+    'โปรดชำระเงินภายใน ' + s.payDays + ' วันหลังจากได้รับใบแจ้งราคา หากเกินกำหนดกรุณายื่นใบขอสั่งซื้อยาในเรือนเลี้ยงสัตว์ทดลองใหม่อีกครั้ง',
+    'ห้ามนำยาออกนอกเรือนเลี้ยงสัตว์ทดลองโดยเด็ดขาด',
+    'ขวดยา เข็มฉีดยา กรุณาทิ้งในที่ที่จัดให้เท่านั้น',
+    'ห้ามไม่ให้บุคคลภายนอกที่ไม่เกี่ยวข้องใช้ยาโดยไม่ได้รับอนุญาตจากสัตวแพทย์โดยเด็ดขาด',
+    'การผสมยาให้ผสมตามหลักการความปลอดภัยทางชีวภาพอย่างเคร่งครัด',
+    'สามารถรับใบเสร็จรับเงินภายใน ' + s.receiptDays + ' วัน'
+  ];
+}
+
+/* ================= เอกสารสำหรับพิมพ์ ================= */
+function docHead(title, en, code) {
+  const s = db.settings;
+  return '<div class="md-watermark"><img src="logo-lasc.png" alt=""></div>' +
+    '<div class="md-head">' +
+      '<div class="md-logo"><img src="logo-lasc.png" alt="PSU:LASC"></div>' +
+      '<div class="org">' +
+        '<div class="th">' + esc(s.orgTh) + '</div>' +
+        '<div class="en">' + esc(s.orgEn) + '</div>' +
+        '<div class="addr">' + esc(s.orgAddr) +
+          (s.orgPhone ? ' · โทร. ' + esc(s.orgPhone) : '') + (s.orgEmail ? ' · ' + esc(s.orgEmail) : '') +
+          (s.orgTax ? '<br>เลขประจำตัวผู้เสียภาษี ' + esc(s.orgTax) : '') + '</div>' +
+      '</div>' +
+      '<div class="code">SOP MED101<br>' + esc(code) + '</div>' +
+    '</div>' +
+    '<div class="md-title"><div class="t1">' + esc(title) + '</div><div class="t2">' + esc(en) + '</div></div>';
+}
+function docFoot(extra) {
+  return '<div class="md-foot"><span>ออกโดยระบบบริการยาและเวชภัณฑ์ ศูนย์บริการสัตว์ทดลอง ม.อ. · ' + esc(extra || '') + '</span>' +
+    '<span>พิมพ์เมื่อ ' + esc(thaiDate(todayIso())) + '</span></div>';
+}
+function itemRows(r, withPrice) {
+  const cols = withPrice ? 7 : 5;
+  const rows = (r.items || []).map((it, i) =>
+    '<tr><td class="ctr">' + (i+1) + '</td><td>' + esc(it.name) +
+    (it.ctrl && it.ctrl !== 'ทั่วไป' ? ' <b>(' + esc(it.ctrl) + ')</b>' : '') + '</td>' +
+    '<td class="ctr">' + esc(it.strength || '-') + '</td>' +
+    '<td class="num">' + num(it.qty).toLocaleString('th-TH', { maximumFractionDigits:2 }) + '</td>' +
+    '<td class="ctr">' + esc(it.unit || '-') + '</td>' +
+    (withPrice ? '<td class="num">' + money(it.price) + '</td><td class="num">' + money(itemAmount(it)) + '</td>' : '') +
+    '</tr>').join('');
+  const filler = Math.max(0, 6 - (r.items || []).length);
+  const blanks = new Array(filler).fill('<tr>' + new Array(cols).fill('<td>&nbsp;</td>').join('') + '</tr>').join('');
+  return rows + blanks;
+}
+/* --- Med101 ใบขอซื้อยา --- */
+function docMed101(r) {
+  const s = db.settings;
+  return '<div class="md-doc">' + docHead('บันทึกการขอซื้อยาในเรือนเลี้ยงสัตว์ทดลอง',
+      'Request for purchase of medicine and medical supplies', 'Med101 · เลขที่ ' + (r.no || '-')) +
+    '<div class="md-box">บันทึกโดย <b>' + esc(s.vetName) + '</b> เลขที่ใบอนุญาตประกอบวิชาชีพ ' + esc(s.vetLicense) +
+      ' · สัตวแพทย์ประจำ' + esc(s.orgTh) + '</div>' +
+    '<div class="md-sec">1. ข้อมูลผู้ขอใช้บริการ</div>' +
+    '<table class="md-kv">' +
+      kv('นักวิจัยผู้สั่งซื้อยา', r.req.name) +
+      kv('หน่วยงาน / คณะ / ภาควิชา', r.req.org) +
+      kv('เลขประจำตัวผู้เสียภาษี', r.req.tax) +
+      kv('เลขที่ใบอนุญาตการใช้สัตว์ทดลอง', r.req.license) +
+      kv('เบอร์โทรที่สามารถติดต่อได้', r.req.phone) +
+      kv('E-mail', r.req.email) +
+      kv('ชื่อในการออกบิลใบเสร็จ', r.req.bill) +
+      kv('ที่อยู่สำหรับออกใบเสร็จ', r.req.addr) +
+    '</table>' +
+    '<div class="md-sec">2. ข้อมูลงานวิจัย</div>' +
+    '<table class="md-kv">' +
+      kv('เลขที่งานวิจัย', r.study.no) +
+      kv('ชื่องานวิจัย', r.study.title) +
+      kv('วันที่เริ่มใช้ยา', thaiDate(r.startUse)) +
+      kv('วันที่ยื่นคำขอ', thaiDate(r.date) + (r.startUse && r.date ? '  (ล่วงหน้า ' + dayDiff(r.date, r.startUse) + ' วัน · SOP 6.1 กำหนดอย่างน้อย ' + s.leadDays + ' วัน)' : '')) +
+    '</table>' +
+    '<div class="md-sec">3. ชนิดยาและจำนวน</div>' +
+    '<table class="md-items"><thead><tr><th style="width:28px">ที่</th><th>รายการชนิดยา</th>' +
+      '<th style="width:110px">ความเข้มข้น/ขนาดบรรจุ</th><th style="width:66px">จำนวน</th><th style="width:66px">หน่วย</th></tr></thead>' +
+      '<tbody>' + itemRows(r, false) + '</tbody></table>' +
+    '<div class="md-box"><b>เอกสารที่แนบมา</b> &nbsp;&nbsp;' +
+      box(r.att.license) + ' สำเนาใบอนุญาตใช้สัตว์ทดลอง &nbsp;&nbsp;' +
+      box(r.att.id) + ' สำเนาบัตรประชาชน &nbsp;&nbsp;' +
+      box(r.att.ctrl) + ' แบบคำขอวัตถุออกฤทธิ์/ยาเสพติดให้โทษ' +
+      (r.note ? '<br><b>หมายเหตุ</b> ' + esc(r.note) : '') + '</div>' +
+    '<div class="md-sign">' +
+      '<div><div class="line"></div>( ' + esc(r.req.name || '.'.repeat(24)) + ' )<br>ผู้ขอซื้อยาและเวชภัณฑ์<br>วันที่ ......../......../........</div>' +
+      '<div><div class="line"></div>( ' + esc(s.vetName) + ' )<br>สัตวแพทย์ประจำเรือนเลี้ยงสัตว์ทดลอง<br>วันที่ ......../......../........</div>' +
+    '</div>' + docFoot('Med101 · จัดเก็บ ' + s.retention + ' ปี') + '</div>';
+}
+/* --- Med102 ใบแจ้งค่าใช้จ่าย --- */
+function docMed102(r) {
+  const s = db.settings;
+  const due = r.quote.date ? addDays(r.quote.date, s.payDays) : '';
+  const sub = (r.items || []).reduce((x, it) => x + itemAmount(it), 0);
+  return '<div class="md-doc">' + docHead('ใบแจ้งค่าใช้จ่ายการขอซื้อยาที่เรือนเลี้ยงสัตว์ทดลอง',
+      'Statement of charges for medicine and medical supplies', 'Med102 · เลขที่ ' + (r.no || '-')) +
+    '<div class="md-box">บันทึกโดย <b>' + esc(s.vetName) + '</b> เลขที่ใบอนุญาต ' + esc(s.vetLicense) +
+      '<br>สถานที่จำหน่าย <b>' + esc(r.vendor || s.vendor) + '</b>' +
+      (r.quote.date ? '<br>วันที่แจ้งค่าใช้จ่าย ' + esc(thaiDate(r.quote.date)) +
+        ' · <b>ครบกำหนดชำระเงิน ' + esc(thaiDate(due)) + '</b>' : '') + '</div>' +
+    '<div class="md-sec">1. ข้อมูลผู้ขอซื้อยา</div>' +
+    '<table class="md-kv">' +
+      kv('นักวิจัยผู้สั่งซื้อยา', r.req.name) +
+      kv('หน่วยงาน / คณะ / ภาควิชา', r.req.org) +
+      kv('เลขประจำตัวผู้เสียภาษี', r.req.tax) +
+      kv('เลขที่ใบอนุญาตการใช้สัตว์ทดลอง', r.req.license) +
+      kv('เบอร์โทรที่สามารถติดต่อได้', r.req.phone) +
+      kv('E-mail', r.req.email) +
+      kv('ออกใบเสร็จในนาม', (r.req.bill || r.req.name) + (r.req.addr ? ' · ' + r.req.addr : '')) +
+    '</table>' +
+    '<div class="md-sec">2. รายการยาและค่าใช้จ่าย</div>' +
+    '<table class="md-items"><thead><tr><th style="width:28px">ที่</th><th>รายการชนิดยา</th>' +
+      '<th style="width:100px">ความเข้มข้น</th><th style="width:56px">จำนวน</th><th style="width:56px">หน่วย</th>' +
+      '<th style="width:80px">ราคาต่อหน่วย</th><th style="width:88px">จำนวนเงิน</th></tr></thead>' +
+      '<tbody>' + itemRows(r, true) + '</tbody></table>' +
+    '<div class="md-sum">' +
+      '<div class="words"><b>จำนวนเงินรวมทั้งสิ้น (ตัวอักษร)</b><br>( ' + esc(bahtText(r.total)) + ' )</div>' +
+      '<div class="amt"><table>' +
+        '<tr><td class="k">รวมค่ายาและเวชภัณฑ์</td><td class="v">' + money(sub) + '</td></tr>' +
+        '<tr><td class="k">ค่าดำเนินการ</td><td class="v">' + money(r.fee) + '</td></tr>' +
+        '<tr class="grand"><td class="k">รวมค่าใช้จ่ายทั้งหมด (บาท)</td><td class="v">' + money(r.total) + '</td></tr>' +
+      '</table></div>' +
+    '</div>' +
+    '<div class="md-terms"><b>ข้อปฏิบัติ</b><ol>' + quoteTerms().map(t => '<li>' + esc(t) + '</li>').join('') + '</ol></div>' +
+    '<div class="md-sign">' +
+      '<div><div class="line"></div>( ' + esc(s.vetName) + ' )<br>ผู้แจ้งค่าใช้จ่าย / สัตวแพทย์ประจำ<br>วันที่ ......../......../........</div>' +
+      '<div><div class="line"></div>( ' + esc(r.req.name || '.'.repeat(24)) + ' )<br>ผู้ขอซื้อยา (รับทราบค่าใช้จ่าย)<br>วันที่ ......../......../........</div>' +
+    '</div>' + docFoot('Med102 · จัดเก็บ ' + s.retention + ' ปี') + '</div>';
+}
+/* --- Med103 แบบบันทึกการรับยา --- */
+function docMed103(r) {
+  const s = db.settings;
+  return '<div class="md-doc">' + docHead('แบบบันทึกการรับยาและเวชภัณฑ์',
+      'The receipt of medicine and medical supplies', 'Med103 · รหัสเอกสาร ' + (r.recv.code || '-')) +
+    '<table class="md-kv">' +
+      kv('ชื่อนักวิจัยหรือผู้ขอซื้อยา', r.req.name) +
+      kv('คณะ / ภาควิชา', r.req.org) +
+      kv('ออกใบเสร็จในนาม', r.req.bill || r.req.name) +
+      kv('ผู้ดำเนินการสั่งซื้อ', s.vetName) +
+      kv('ผู้ดำเนินการชำระเงิน', r.req.payer || r.req.name) +
+      kv('เบอร์โทรศัพท์ติดต่อ', r.req.phone) +
+      kv('เลขที่คำขอ (รหัสบริการ)', r.no) +
+    '</table>' +
+    '<div class="md-sec">รายการที่ส่งมอบ</div>' +
+    '<table class="md-items"><thead><tr><th style="width:28px">ที่</th><th>ชนิด</th>' +
+      '<th style="width:100px">ความเข้มข้น</th><th style="width:56px">จำนวน</th><th style="width:76px">ปริมาณต่อหน่วย</th>' +
+      '<th style="width:80px">ราคาต่อหน่วย</th><th style="width:88px">จำนวนเงิน</th></tr></thead>' +
+      '<tbody>' + itemRows(r, true) + '</tbody></table>' +
+    '<div class="md-box">' +
+      'ผู้จำหน่ายยาและเวชภัณฑ์ <b>' + esc(r.vendor || s.vendor) + '</b>' +
+      '<br>เลขที่ใบเสร็จรับเงิน ' + esc(r.order.receiptNo || '.'.repeat(30)) +
+      (r.order.receiptDate ? ' · ลงวันที่ ' + esc(thaiDate(r.order.receiptDate)) : '') +
+      '<br>รวมราคาทั้งหมด <b>' + money(r.total) + '</b> บาท ( ' + esc(bahtText(r.total)) + ' )' +
+      '<br>วันที่รับยา ' + esc(r.recv.date ? thaiDate(r.recv.date) : '......../......../........') +
+      ' · ผู้รับยา ' + esc(r.recv.by || '.'.repeat(24)) +
+    '</div>' +
+    '<div class="md-box">' +
+      '<b>สถานะการสั่งซื้อ</b> &nbsp;' + box(!r.pay.date) + ' รอการชำระเงิน &nbsp;&nbsp;' +
+        box(!!r.pay.date) + ' ชำระเงินแล้ว' + (r.pay.date ? ' (' + esc(thaiDate(r.pay.date)) + ')' : '') +
+      '<br><b>นักวิจัยหรือผู้ขอซื้อยา ได้ตรวจสอบชนิด ความเข้มข้น และจำนวน</b> &nbsp;' +
+        box(r.recv.checked === 'ok') + ' ตรวจสอบแล้ว ถูกต้อง &nbsp;&nbsp;' +
+        box(r.recv.checked === 'bad') + ' ตรวจสอบแล้ว ไม่ถูกต้อง &nbsp;&nbsp;' +
+        box(r.recv.checked === 'no') + ' ยังไม่ตรวจสอบ' +
+      '<br><b>นักวิจัยได้รับใบเสร็จรับเงิน หรือ/และ ใบกำกับภาษีจากสถานที่จำหน่าย</b> &nbsp;' +
+        box(r.recv.receiptGot === 'yes') + ' ได้รับเรียบร้อยแล้ว &nbsp;&nbsp;' +
+        box(r.recv.receiptGot === 'no') + ' ยังไม่ได้รับ' +
+      (r.recv.note ? '<br><b>หมายเหตุ</b> ' + esc(r.recv.note) : '') +
+    '</div>' +
+    '<div class="md-sign">' +
+      '<div><div class="line"></div>( ' + esc(r.recv.by || r.req.name || '.'.repeat(24)) + ' )<br>ผู้ขอซื้อยาและเวชภัณฑ์<br>วันที่ ......../......../........</div>' +
+      '<div><div class="line"></div>( ' + esc(s.vetName) + ' )<br>สัตวแพทย์ประจำเรือนเลี้ยงสัตว์ทดลอง<br>วันที่ ......../......../........</div>' +
+    '</div>' + docFoot('Med103 · จัดเก็บ ' + s.retention + ' ปี') + '</div>';
+}
+/* --- ใบสั่งซื้อถึงบริษัท/สถานที่จำหน่าย --- */
+function docOrder(r) {
+  const s = db.settings;
+  return '<div class="md-doc">' + docHead('ใบสั่งซื้อยาและเวชภัณฑ์',
+      'Purchase order for medicine and medical supplies', 'อ้างอิงคำขอเลขที่ ' + (r.no || '-')) +
+    '<div class="md-box">เรียน <b>' + esc(r.vendor || s.vendor) + '</b>' +
+      '<br>ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์ ขอสั่งซื้อยาและเวชภัณฑ์ตามรายการด้านล่าง' +
+      ' เพื่อใช้ในงานวิจัยของ <b>' + esc(r.req.name) + '</b> ' + esc(r.req.org) +
+      (r.study.no ? ' (เลขที่งานวิจัย ' + esc(r.study.no) + ')' : '') +
+      '<br>กรุณาออกใบเสร็จรับเงิน/ใบกำกับภาษีในนาม <b>' + esc(r.req.bill || r.req.name) + '</b>' +
+      (r.req.tax ? ' เลขประจำตัวผู้เสียภาษี ' + esc(r.req.tax) : '') +
+      (r.req.addr ? ' ที่อยู่ ' + esc(r.req.addr) : '') + '</div>' +
+    '<table class="md-items"><thead><tr><th style="width:28px">ที่</th><th>รายการชนิดยา</th>' +
+      '<th style="width:100px">ความเข้มข้น</th><th style="width:56px">จำนวน</th><th style="width:56px">หน่วย</th>' +
+      '<th style="width:80px">ราคาต่อหน่วย</th><th style="width:88px">จำนวนเงิน</th></tr></thead>' +
+      '<tbody>' + itemRows(r, true) + '</tbody></table>' +
+    '<div class="md-sum"><div class="words"><b>จำนวนเงินรวม (ตัวอักษร)</b><br>( ' + esc(bahtText(r.total - num(r.fee))) + ' )</div>' +
+      '<div class="amt"><table><tr class="grand"><td class="k">รวมค่ายาและเวชภัณฑ์</td><td class="v">' +
+      money(r.total - num(r.fee)) + '</td></tr></table></div></div>' +
+    '<div class="md-sign">' +
+      '<div><div class="line"></div>( ' + esc(s.vetName) + ' )<br>สัตวแพทย์ประจำ ผู้สั่งซื้อ<br>วันที่ ' +
+        (r.order.date ? esc(thaiDate(r.order.date)) : '......../......../........') + '</div>' +
+      '<div><div class="line"></div>( ' + esc(s.approver || '.'.repeat(24)) + ' )<br>ผู้อนุมัติ<br>วันที่ ......../......../........</div>' +
+    '</div>' + docFoot('เอกสารประกอบคำขอเลขที่ ' + (r.no || '-')) + '</div>';
+}
+function kv(k, v) {
+  return '<tr><th>' + esc(k) + '</th><td>' + (v ? esc(v) : '&nbsp;') + '</td></tr>';
+}
+function box(on) { return on ? '☑' : '☐'; }
+
+function buildDoc(r, which) {
+  switch (which) {
+    case 'med101': return docMed101(r);
+    case 'med102': return docMed102(r);
+    case 'med103': return docMed103(r);
+    case 'order':  return docOrder(r);
+    default:       return docMed101(r) + docMed102(r) + docMed103(r);
+  }
+}
+async function printDoc(which) {
+  const r = collectForm();
+  if (!r.req.name) { toast('กรอกข้อมูลผู้ขอใช้บริการก่อนพิมพ์'); return; }
+  if (!r.no) {
+    if (!confirm('คำขอนี้ยังไม่ได้บันทึกและยังไม่มีเลขที่\nต้องการบันทึกก่อนพิมพ์หรือไม่? (กด “ยกเลิก” เพื่อพิมพ์เป็นร่าง)')) {
+      renderPrint(buildDoc(r, which)); return;
+    }
+    if (!await saveRequest(true)) return;
+  }
+  renderPrint(buildDoc(cur, which));
+}
+function printSaved(id) {
+  const r = db.requests.find(x => x.id === id);
+  if (!r) return;
+  const which = prompt('พิมพ์เอกสารใด?\n1 = ใบขอซื้อยา (Med101)\n2 = ใบแจ้งค่าใช้จ่าย (Med102)\n3 = แบบบันทึกการรับยา (Med103)\n4 = ใบสั่งซื้อถึงบริษัท\n5 = ครบชุด 3 ฉบับ', '1');
+  if (which === null) return;
+  const map = { '1':'med101', '2':'med102', '3':'med103', '4':'order', '5':'all' };
+  renderPrint(buildDoc(r, map[which.trim()] || 'med101'));
+}
+function renderPrint(html) {
+  $('printArea').innerHTML = html;
+  window.print();
+}
+
+/* ================= ส่งออก / นำเข้า ================= */
+function csvCell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+function download(name, content, type) {
+  const blob = new Blob([content], { type: type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 500);
+}
+function exportCsv() {
+  const head = ['เลขที่คำขอ','วันที่ยื่น','วันที่เริ่มใช้ยา','สถานะ','ชื่อ-นามสกุลผู้ขอซื้อ','หน่วยงาน',
+    'เลขที่ใบอนุญาตใช้สัตว์ทดลอง','โทรศัพท์','อีเมล','เลขที่งานวิจัย','ชื่องานวิจัย','ชื่อยา','จำนวนที่ต้องการ',
+    'ค่ายาและเวชภัณฑ์','ค่าดำเนินการ','รวมทั้งหมด','วันที่แจ้งค่าใช้จ่าย','ครบกำหนดชำระ','วันที่ชำระเงิน',
+    'วันที่สั่งซื้อ','เลขที่ใบเสร็จ','วันที่ได้รับ','รหัสเอกสารรับยา','ผลการตรวจรับ','ไฟล์อ้างอิงเอกสาร','หมายเหตุ'];
+  const lines = [head.join(',')].concat(db.requests.map(r => {
+    const sub = (r.items || []).reduce((x, it) => x + itemAmount(it), 0);
+    const chk = { ok:'ตรวจสอบแล้ว ถูกต้อง', bad:'ตรวจสอบแล้ว ไม่ถูกต้อง', no:'ยังไม่ตรวจสอบ' }[r.recv.checked] || '';
+    return [
+      r.no, r.date, r.startUse, STATUS[r.status].label, r.req.name, r.req.org, r.req.license, r.req.phone, r.req.email,
+      r.study.no, r.study.title,
+      (r.items || []).map(i => i.name).join(' / '),
+      (r.items || []).map(i => num(i.qty) + ' ' + (i.unit || '')).join(' / '),
+      sub.toFixed(2), num(r.fee).toFixed(2), num(r.total).toFixed(2),
+      r.quote.date, r.quote.date ? addDays(r.quote.date, db.settings.payDays) : '', r.pay.date,
+      r.order.date, r.order.receiptNo, r.recv.date, r.recv.code, chk, r.fileRef, r.note
+    ].map(csvCell).join(',');
+  }));
+  download('LASC-medicine-requests-' + todayIso() + '.csv', '﻿' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+  toast('ส่งออกทะเบียนเป็น CSV แล้ว (เปิดด้วย Excel ได้ทันที)');
+}
+/* คัดลอกแถวให้ตรงคอลัมน์ชีท “รายการการขอซื้อยาและเวชภัณฑ์” เดิมของหน่วยงาน */
+function copyRegistryRow() {
+  const r = collectForm();
+  const row = [
+    r.req.name, r.date, (r.items || []).map(i => i.name).join(' / '),
+    (r.items || []).map(i => num(i.qty) + ' ' + (i.unit || '')).join(' / '),
+    r.recv.date, r.fileRef, r.no
+  ].map(v => String(v == null ? '' : v).replace(/\t/g, ' ').replace(/\r?\n/g, ' ')).join('\t');
+  const done = () => toast('คัดลอกแล้ว — วางในชีท “รายการการแจ้ง” ได้เลย (7 คอลัมน์)');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(row).then(done, () => fallbackCopy(row, done));
+  } else fallbackCopy(row, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); }
+  catch (e) { prompt('คัดลอกข้อความด้านล่างด้วยตนเอง:', text); }
+  document.body.removeChild(ta);
+}
+function exportJson() {
+  download('LASC-medicine-backup-' + todayIso() + '.json', JSON.stringify(db, null, 2), 'application/json');
+  toast('สำรองข้อมูลแล้ว');
+}
+function importJson(ev) {
+  const f = ev.target.files && ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const obj = JSON.parse(r.result);
+      if (!obj || !Array.isArray(obj.requests)) throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+      if (!confirm('กู้คืนข้อมูลจากไฟล์นี้? ข้อมูลปัจจุบันในเครื่องจะถูกแทนที่ทั้งหมด\n' +
+                   'คำขอในไฟล์: ' + obj.requests.length + ' รายการ')) return;
+      db = Object.assign(blankDb(), obj);
+      db.settings = Object.assign({}, DEFAULT_SETTINGS, obj.settings || {});
+      save(); initViews();
+      toast('กู้คืนข้อมูลเรียบร้อยแล้ว');
+      // ถ้าล็อกอินอยู่ ให้ส่งข้อมูลที่กู้คืนขึ้นคลาวด์ด้วย เพื่อให้ทุกเครื่องตรงกัน
+      if (cloudReady()) { db.requests.forEach(x => cloudPushRequest(x)); cloudPushMaster(); }
+    } catch (e) { alert('นำเข้าไม่สำเร็จ: ' + e.message); }
+    ev.target.value = '';
+  };
+  r.readAsText(f);
+}
+
+/* ================= แท็บ / เริ่มระบบ ================= */
+function showTab(name) {
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('section.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
+  if (name === 'dash') renderDash();
+  if (name === 'list') renderList();
+  if (name === 'drugs') renderDrugs();
+  if (name === 'sop') renderSop();
+  if (name === 'settings') fillSettingsForm();
+  window.scrollTo(0, 0);
+}
+function initViews() {
+  applySettingsHints();
+  fillPicker(); fillDatalists();
+  newRequest();
+  renderDrugs(); renderList(); renderDash(); renderSop(); fillSettingsForm();
+  showTab('dash');
+}
+function init() {
+  load();
+  $('verLabel').textContent = 'v' + APP_VERSION;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  initViews();
+  initPWA();
+}
+
+/* =====================================================================
+   Cloud sync (Firebase Realtime Database)
+   ใช้โปรเจกต์ Firebase เดียวกับ “ระบบตรวจติดตามการดำเนินการต่อสัตว์ฯ” และ “ระบบใบเสนอราคา”
+   จึงใช้อีเมล/รหัสผ่านชุดเดียวกันได้ และเก็บข้อมูลแยกไว้ใต้ data/medicine
+   ===================================================================== */
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAdC4jcKj8GBEWR1lOFDZQA_Y90M4FXNt8",
+  authDomain: "psu-lasc-animal.firebaseapp.com",
+  databaseURL: "https://psu-lasc-animal-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "psu-lasc-animal",
+  storageBucket: "psu-lasc-animal.firebasestorage.app",
+  messagingSenderId: "726169505667",
+  appId: "1:726169505667:web:a5f7401be7ed1e809f30b6"
+};
+const CLOUD_ROOT = 'data/medicine';   // แยกจาก data/projects และ data/quotation ของแอปอื่น
+const APP_URL = 'https://kwanchanokd.github.io/psu-lasc-medicine/';
+
+let fb = null;                 // ฟังก์ชันจาก Firebase SDK
+let cloudUser = null;          // ผู้ใช้ที่ล็อกอินอยู่
+let applyingSnapshot = false;  // กันไม่ให้ข้อมูลที่รับมาย้อนกลับขึ้นคลาวด์ซ้ำ
+let masterPushTimer = null;
+let firstSyncDone = false;
+
+function setCloudChip(state, text) {
+  const chip = $('cloudChip');
+  if (!chip) return;
+  chip.className = 'sync-chip' + (state ? ' ' + state : '');
+  chip.textContent = text;
+  $('logoutBtn').classList.toggle('hidden', !cloudUser);
+}
+function cloudReady() { return !!(fb && cloudUser && !applyingSnapshot); }
+
+/* ---------- เข้าสู่ระบบ / ออกจากระบบ ---------- */
+function openLogin() {
+  if (location.protocol === 'file:') {
+    alert('⚠ ขณะนี้คุณเปิดแอปจากไฟล์ในเครื่องโดยตรง ซึ่งเข้าสู่ระบบไม่ได้\n\n' +
+          'กรุณาเปิดแอปจากที่อยู่นี้แทน:\n' + APP_URL + '\n\n(กด OK เพื่อเปิดให้อัตโนมัติ)');
+    window.open(APP_URL, '_blank');
+    return;
+  }
+  $('lg_error').classList.add('hidden');
+  $('lg_pass').value = '';
+  $('loginModal').classList.remove('hidden');
+  setTimeout(() => $('lg_email').focus(), 50);
+}
+const LOGIN_ERRORS = {
+  'auth/invalid-email': 'รูปแบบอีเมลไม่ถูกต้อง',
+  'auth/user-not-found': 'ไม่พบบัญชีนี้ในระบบ — ติดต่อผู้ดูแลระบบเพื่อสร้างบัญชีให้',
+  'auth/wrong-password': 'รหัสผ่านไม่ถูกต้อง',
+  'auth/invalid-credential': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+  'auth/user-disabled': 'บัญชีนี้ถูกระงับการใช้งาน',
+  'auth/too-many-requests': 'ลองผิดหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่',
+  'auth/network-request-failed': 'เชื่อมต่ออินเทอร์เน็ตไม่ได้ กรุณาตรวจสอบสัญญาณ'
+};
+async function doLogin(ev) {
+  ev.preventDefault();
+  if (!fb) return;
+  const btn = $('lg_submit'), errBox = $('lg_error');
+  btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ…';
+  errBox.classList.add('hidden');
+  try {
+    await fb.signIn(fb.auth, $('lg_email').value.trim(), $('lg_pass').value);
+    $('loginModal').classList.add('hidden');
+  } catch (e) {
+    let msg = LOGIN_ERRORS[e.code];
+    if (!msg && (e.name === 'SecurityError' || e.code === 18)) {
+      msg = 'เบราว์เซอร์บล็อกการเข้าสู่ระบบ — กรุณาเปิดแอปจาก ' + APP_URL + ' และอย่าใช้โหมดไม่ระบุตัวตน';
+    }
+    errBox.textContent = msg || ('เข้าสู่ระบบไม่สำเร็จ: ' + (e.code || e.name || '') + ' ' + (e.message || ''));
+    errBox.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = '🔑 เข้าสู่ระบบ';
+    $('lg_pass').value = '';
+  }
+}
+async function doLogout() {
+  if (!fb || !cloudUser) return;
+  if (!confirm('ออกจากระบบ?\n\nข้อมูลที่ซิงก์แล้วยังอยู่ในเครื่องนี้ แต่จะหยุดซิงก์กับเครื่องอื่นจนกว่าจะเข้าสู่ระบบใหม่')) return;
+  await fb.signOut(fb.auth);
+}
+
+/* ---------- ส่งข้อมูลขึ้นคลาวด์ ---------- */
+/* ข้อมูลหลัก = การตั้งค่าตาม SOP + บัญชียาและราคา (หน่วงไว้เล็กน้อยไม่ให้เขียนถี่เกินไป) */
+function masterPayload() {
+  return { settings: db.settings, drugs: db.drugs, updatedAt: new Date().toISOString() };
+}
+function cloudPushMaster() {
+  if (!cloudReady()) return;
+  clearTimeout(masterPushTimer);
+  masterPushTimer = setTimeout(async () => {
+    try {
+      await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/master'), masterPayload());
+      setCloudChip('ok', '☁ ซิงก์แล้ว · ' + (cloudUser.email || ''));
+    } catch (e) {
+      setCloudChip('err', '⚠ บันทึกข้อมูลหลักขึ้นคลาวด์ไม่สำเร็จ — ข้อมูลยังอยู่ในเครื่อง');
+    }
+  }, 800);
+}
+async function cloudPushRequest(r) {
+  if (!cloudReady()) return;
+  try {
+    setCloudChip('', '☁ กำลังบันทึกขึ้นคลาวด์…');
+    await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/requests/' + r.id), r);
+    await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/updatedAt'), new Date().toISOString());
+    setCloudChip('ok', '☁ ซิงก์แล้ว · ' + (cloudUser.email || ''));
+  } catch (e) {
+    setCloudChip('err', '⚠ บันทึกขึ้นคลาวด์ไม่สำเร็จ — ข้อมูลยังอยู่ในเครื่อง');
+  }
+}
+async function cloudRemoveRequest(id) {
+  if (!cloudReady()) return;
+  try { await fb.remove(fb.ref(fb.rtdb, CLOUD_ROOT + '/requests/' + id)); } catch (e) {}
+}
+
+/* ---------- จองเลขที่คำขอแบบไม่ซ้ำข้ามเครื่อง ---------- */
+function counterKey(iso) { return db.settings.resetRun === 'year' ? yearToken(iso) : 'all'; }
+async function allocateNo(iso) {
+  const key = counterKey(iso);
+  if (fb && cloudUser) {
+    try {
+      const localNext = nextRunFor(iso);
+      const res = await fb.runTransaction(
+        fb.ref(fb.rtdb, CLOUD_ROOT + '/counters/' + key),
+        (c) => (c == null ? localNext : c + 1)      // ค่าในคลาวด์ = เลขล่าสุดที่ถูกใช้ไปแล้ว
+      );
+      let run = num(res.snapshot.val()) || localNext;
+      const used = new Set(db.requests.map(x => x.no).filter(Boolean));
+      if (used.has(buildNo(iso, run))) {            // กันชนกับเลขที่นำเข้ามาจากไฟล์สำรอง
+        while (used.has(buildNo(iso, run))) run++;
+        await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/counters/' + key), run);
+      }
+      db.nextRun = run + 1;
+      return buildNo(iso, run);
+    } catch (e) {
+      setCloudChip('err', '⚠ จองเลขที่จากคลาวด์ไม่สำเร็จ — ใช้เลขลำดับในเครื่องแทน');
+    }
+  }
+  const run = nextRunFor(iso);
+  if (db.settings.resetRun !== 'year') db.nextRun = run + 1;
+  return buildNo(iso, run);
+}
+
+/* ---------- รับข้อมูลจากคลาวด์มาใช้ในเครื่อง ---------- */
+function applyCloudRequests(remote) {
+  applyingSnapshot = true;
+  try {
+    const list = remote ? Object.keys(remote).map(k => remote[k]) : [];
+    list.forEach(r => {
+      if (!Array.isArray(r.items)) r.items = [];
+      if (!Array.isArray(r.history)) r.history = [];
+      ['req','study','att','quote','pay','order','recv'].forEach(k => { if (!r[k]) r[k] = {}; });
+    });
+    list.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    db.requests = list;
+    save();
+    renderList(); renderDash();
+    // ถ้าคำขอที่เปิดค้างอยู่ถูกแก้จากเครื่องอื่น ให้ดึงฉบับล่าสุดมาแสดง (เฉพาะตอนที่ไม่ได้อยู่หน้าฟอร์ม)
+    if (cur && cur.no && !$('page-form').classList.contains('active')) {
+      const fresh = list.find(x => x.id === cur.id);
+      if (fresh) { cur = JSON.parse(JSON.stringify(fresh)); fillForm(); }
+    }
+  } finally { applyingSnapshot = false; }
+}
+function applyCloudMaster(m) {
+  if (!m) return;
+  applyingSnapshot = true;
+  try {
+    if (m.settings) db.settings = Object.assign({}, DEFAULT_SETTINGS, m.settings);
+    if (Array.isArray(m.drugs) && m.drugs.length) db.drugs = m.drugs;
+    save();
+    applySettingsHints(); fillPicker(); renderDash();
+    // ไม่เขียนทับฟอร์มขณะที่ผู้ใช้กำลังแก้ไขอยู่หน้านั้น
+    if (!$('page-settings').classList.contains('active')) fillSettingsForm();
+    if (!$('page-drugs').classList.contains('active')) renderDrugs();
+    renderSop();
+  } finally { applyingSnapshot = false; }
+}
+
+/* ---------- เรียกโดย module script เมื่อโหลด Firebase SDK เสร็จ ---------- */
+window.onFirebaseReady = function (api) {
+  fb = api;
+  if (location.protocol === 'file:') {
+    setCloudChip('err', '⚠ เปิดจากไฟล์ในเครื่อง — ซิงก์คลาวด์ไม่ได้');
+    $('cloudBarMsg').innerHTML =
+      '⚠ <b>คุณเปิดแอปจากไฟล์ในเครื่อง</b> — เข้าสู่ระบบและซิงก์ข้อมูลไม่ได้ ' +
+      'กรุณาเปิดจาก <a href="' + APP_URL + '"><b>' + APP_URL + '</b></a> แทน';
+    $('cloudBar').classList.remove('hidden');
+    return;
+  }
+  setCloudChip('', '☁ ยังไม่ได้เข้าสู่ระบบ');
+  fb.onAuthStateChanged(fb.auth, async (user) => {
+    cloudUser = user;
+    if (!user) {
+      firstSyncDone = false;
+      setCloudChip('', '☁ ยังไม่ได้เข้าสู่ระบบ');
+      $('cloudBar').classList.remove('hidden');
+      return;
+    }
+    $('cloudBar').classList.add('hidden');
+    setCloudChip('', '☁ กำลังซิงก์ข้อมูล…');
+    try {
+      // ครั้งแรกที่ล็อกอิน: อัปโหลดคำขอที่มีเฉพาะในเครื่องนี้ขึ้นคลาวด์ (ไม่ทับของเดิม)
+      const snap = await fb.get(fb.ref(fb.rtdb, CLOUD_ROOT + '/requests'));
+      const remote = snap.exists() ? snap.val() : null;
+      const remoteIds = new Set(remote ? Object.keys(remote) : []);
+      const localOnly = db.requests.filter(r => !remoteIds.has(r.id));
+      for (const r of localOnly) await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/requests/' + r.id), r);
+      if (localOnly.length) toast('อัปโหลดคำขอในเครื่อง ' + localOnly.length + ' รายการขึ้นคลาวด์เรียบร้อย');
+
+      // ข้อมูลหลัก: ถ้าคลาวด์ยังว่าง ให้ส่งของเครื่องนี้ขึ้นไปเป็นชุดตั้งต้น
+      const mSnap = await fb.get(fb.ref(fb.rtdb, CLOUD_ROOT + '/master'));
+      if (!mSnap.exists()) await fb.set(fb.ref(fb.rtdb, CLOUD_ROOT + '/master'), masterPayload());
+
+      // ติดตามการเปลี่ยนแปลงแบบเรียลไทม์
+      fb.onValue(fb.ref(fb.rtdb, CLOUD_ROOT + '/requests'), (s) => {
+        applyCloudRequests(s.exists() ? s.val() : null);
+        setCloudChip('ok', '☁ ซิงก์แล้ว · ' + (user.email || ''));
+        if (!firstSyncDone) {
+          firstSyncDone = true;
+          toast('เชื่อมต่อคลาวด์แล้ว — คำขอ บัญชียา และเลขที่คำขอจะซิงก์ทุกเครื่องอัตโนมัติ');
+        }
+      }, onCloudDenied);
+      fb.onValue(fb.ref(fb.rtdb, CLOUD_ROOT + '/master'), (s) => {
+        if (s.exists()) applyCloudMaster(s.val());
+      }, () => {});
+    } catch (e) {
+      setCloudChip('err', '⚠ เชื่อมต่อคลาวด์ไม่สำเร็จ');
+    }
+  });
+};
+function onCloudDenied() {
+  setCloudChip('err', '⚠ บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าถึงข้อมูล');
+  alert('บัญชีนี้เข้าสู่ระบบได้ แต่ยังไม่ได้รับสิทธิ์เข้าถึงข้อมูลคำขอซื้อยา\n\n' +
+        'กรุณาแจ้งผู้ดูแลระบบให้เพิ่ม User UID ของคุณไว้ใต้ allowed ในฐานข้อมูล ' +
+        'และตรวจว่ากฎความปลอดภัยครอบคลุมเส้นทาง data/medicine แล้ว');
+}
+
+/* ================= PWA ================= */
+let deferredPrompt = null, swReg = null;
+function initPWA() {
+  // service worker ทำงานเฉพาะเมื่อเปิดผ่าน http/https — เปิดจากไฟล์ในเครื่องจะข้ามส่วนนี้ไป
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      swReg = reg;
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) $('updateBar').classList.remove('hidden');
+        });
+      });
+    }).catch(() => {});
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e; $('installBtn').classList.remove('hidden');
+  });
+  window.addEventListener('appinstalled', () => { $('installBtn').classList.add('hidden'); });
+}
+function installApp() {
+  if (!deferredPrompt) { toast('เปิดเมนูเบราว์เซอร์แล้วเลือก “ติดตั้งแอป” หรือ “เพิ่มไปยังหน้าจอโฮม”'); return; }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(() => { deferredPrompt = null; $('installBtn').classList.add('hidden'); });
+}
+function updateNow() {
+  if (swReg) swReg.update();
+  if ('caches' in window) caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).finally(() => location.reload(true));
+  else location.reload(true);
+}
+function applyUpdate() {
+  if (swReg && swReg.waiting) swReg.waiting.postMessage('SKIP_WAITING');
+  setTimeout(() => location.reload(), 300);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<script type="module">
+/* โหลด Firebase SDK แล้วส่งฟังก์ชันที่ต้องใช้กลับไปให้สคริปต์หลัก */
+(async () => {
+  const cfg = window.FIREBASE_CONFIG;
+  if (!cfg || !cfg.apiKey || !cfg.databaseURL) return;   // ยังไม่ได้ตั้งค่า = ใช้งานแบบเก็บในเครื่องอย่างเดียว
+  const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
+  try {
+    const [appMod, authMod, dbMod] = await Promise.all([
+      import(V + 'firebase-app.js'),
+      import(V + 'firebase-auth.js'),
+      import(V + 'firebase-database.js')
+    ]);
+    const app = appMod.initializeApp(cfg);
+    const auth = authMod.getAuth(app);
+    // จำการเข้าสู่ระบบไว้ — ถ้าเบราว์เซอร์ไม่อนุญาต (เช่นเปิดจากไฟล์ในเครื่อง) ให้ทำงานต่อได้
+    try { await authMod.setPersistence(auth, authMod.browserLocalPersistence); } catch (e) {}
+    window.onFirebaseReady({
+      auth,
+      rtdb: dbMod.getDatabase(app),
+      signIn: authMod.signInWithEmailAndPassword,
+      signOut: authMod.signOut,
+      onAuthStateChanged: authMod.onAuthStateChanged,
+      ref: dbMod.ref, set: dbMod.set, get: dbMod.get,
+      onValue: dbMod.onValue, remove: dbMod.remove,
+      runTransaction: dbMod.runTransaction
+    });
+  } catch (e) {
+    const chip = document.getElementById('cloudChip');
+    if (chip) { chip.className = 'sync-chip err'; chip.textContent = '⚠ โหลดระบบคลาวด์ไม่สำเร็จ (ใช้งานแบบออฟไลน์ได้ตามปกติ)'; }
+  }
+})();
+</script>
+</body>
+</html>
