@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>วิธีติดตั้ง Firebase — ระบบบริการยาและเวชภัณฑ์ PSU:LASC</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family:'Sarabun',Tahoma,sans-serif; max-width:900px; margin:0 auto; padding:24px; color:#2c3e50; line-height:1.8; background:#f4f6f9; }
+  h1 { color:#0a5f4e; font-size:23px; }
+  h2 { color:#0e7c66; font-size:18.5px; margin-top:32px; border-bottom:2px solid #dfe6ee; padding-bottom:6px; }
+  h3 { color:#0a5f4e; font-size:15.5px; margin-top:20px; }
+  .card { background:#fff; border:1px solid #dfe6ee; border-radius:10px; padding:18px 22px; margin:14px 0; }
+  code { background:#eef2f6; padding:2px 8px; border-radius:6px; font-size:14px; font-family:Consolas,Monaco,monospace; }
+  pre { background:#1e2a35; color:#e6edf3; padding:14px 16px; border-radius:9px; overflow-x:auto; font-size:13px; line-height:1.6; }
+  pre code { background:none; color:inherit; padding:0; font-size:13px; }
+  .warn { background:#fffbea; border:1px solid #f5e6a8; border-radius:8px; padding:11px 15px; color:#7a6410; margin:12px 0; }
+  .ok   { background:#eafaf5; border:1px solid #a8e0cf; border-radius:8px; padding:11px 15px; color:#0a5c4a; margin:12px 0; }
+  .err  { background:#fdecea; border:1px solid #f5c6cb; border-radius:8px; padding:11px 15px; color:#9c0006; margin:12px 0; }
+  .info { background:#e8f1fa; border:1px solid #b9d4ee; border-radius:8px; padding:11px 15px; color:#124a82; margin:12px 0; }
+  ol li, ul li { margin-bottom:7px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin-top:10px; }
+  th, td { border:1px solid #dfe6ee; padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:#eafaf5; color:#0a5f4e; }
+  .stepnum { display:inline-block; width:30px; height:30px; border-radius:50%; background:#0e7c66; color:#fff;
+             text-align:center; line-height:30px; font-weight:700; margin-right:8px; font-size:15px; }
+  .path { background:#0e7c66; color:#fff; padding:3px 10px; border-radius:6px; font-size:13.5px; display:inline-block; margin:2px 0; }
+  .chk { list-style:none; padding:0; }
+  .chk li { padding-left:30px; position:relative; margin-bottom:9px; }
+  .chk li::before { content:'☐'; position:absolute; left:4px; font-size:17px; color:#0e7c66; }
+  .toc { background:#fff; border:1px solid #dfe6ee; border-radius:10px; padding:14px 22px; }
+  .toc a { color:#0e7c66; text-decoration:none; }
+  .toc a:hover { text-decoration:underline; }
+  footer { text-align:center; color:#7f8c8d; font-size:12.5px; margin-top:36px; }
+</style>
+</head>
+<body>
+
+<h1>🔥 วิธีติดตั้ง Firebase สำหรับระบบบริการยาและเวชภัณฑ์</h1>
+
+<div class="card">
+  คู่มือนี้อธิบายการสร้างโปรเจกต์ <b>Firebase ของระบบยาโดยเฉพาะ</b> แยกออกจากโปรเจกต์
+  <code>psu-lasc-animal</code> ที่ใช้ร่วมกับระบบใบเสนอราคาและระบบตรวจติดตามการดำเนินการต่อสัตว์ฯ
+
+  <table>
+    <tr><th style="width:150px">ใช้เวลา</th><td>ประมาณ 20–30 นาที ทำครั้งเดียวจบ</td></tr>
+    <tr><th>ต้องมี</th><td>บัญชี Google (ใช้บัญชีไหนก็ได้ แนะนำบัญชีที่ใช้ประจำ) และสิทธิ์แก้ไขรีโป GitHub</td></tr>
+    <tr><th>ค่าใช้จ่าย</th><td><b>ไม่มี</b> — ใช้แพ็กเกจ Spark (ฟรี) ซึ่งเกินพอสำหรับงานนี้มาก</td></tr>
+  </table>
+
+  <div class="info">
+    <b>ทำไมต้องแยก</b><br>
+    • บัญชีผู้ใช้ กฎความปลอดภัย และข้อมูล แยกขาดจากระบบอื่น ไม่กระทบกัน<br>
+    • ตั้งรหัสผ่านของสัตวแพทย์ได้เองตั้งแต่ต้น ไม่ต้องพึ่งบัญชีเดิม<br>
+    • ถ้าวันหนึ่งต้องส่งมอบระบบให้คนอื่นดูแล ส่งต่อได้ทั้งโปรเจกต์โดยไม่พ่วงระบบอื่น
+  </div>
+</div>
+
+<div class="toc">
+  <b>ขั้นตอนทั้งหมด</b>
+  <ol style="margin:8px 0 0">
+    <li><a href="#s1">สร้างโปรเจกต์ Firebase</a></li>
+    <li><a href="#s2">เปิดใช้งาน Authentication</a></li>
+    <li><a href="#s3">สร้าง Realtime Database</a></li>
+    <li><a href="#s4">วางกฎความปลอดภัย</a></li>
+    <li><a href="#s5">ลงทะเบียนเว็บแอปและคัดลอกค่าเชื่อมต่อ</a></li>
+    <li><a href="#s6">แก้ไฟล์ firebase-config.js</a></li>
+    <li><a href="#s7">เพิ่มโดเมนที่อนุญาต</a></li>
+    <li><a href="#s8">สร้างบัญชีผู้ใช้</a></li>
+    <li><a href="#s9">ให้สิทธิ์เข้าถึงข้อมูล (allowed)</a></li>
+    <li><a href="#s10">อัปโหลดและทดสอบ</a></li>
+  </ol>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s1"><span class="stepnum">1</span>สร้างโปรเจกต์ Firebase</h2>
+<div class="card">
+  <ol>
+    <li>เปิด <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> แล้วลงชื่อเข้าใช้ด้วยบัญชี Google</li>
+    <li>กด <b>Create a project</b> (หรือ <b>Add project</b> ถ้ามีโปรเจกต์อยู่แล้ว)</li>
+    <li>ตั้งชื่อโปรเจกต์ว่า <code>psu-lasc-medicine</code> → กด <b>Continue</b>
+      <div class="info" style="margin-top:8px">Firebase จะเติมตัวเลขต่อท้ายให้อัตโนมัติถ้าชื่อซ้ำกับคนอื่นทั่วโลก
+        เช่น <code>psu-lasc-medicine-a1b2c</code> — <b>ไม่เป็นไร ใช้ได้ปกติ</b> แต่ให้จำชื่อจริงนี้ไว้</div>
+    </li>
+    <li>หน้า Google Analytics → <b>ปิดสวิตช์</b> (ระบบนี้ไม่ได้ใช้) → กด <b>Create project</b></li>
+    <li>รอประมาณ 30 วินาที → กด <b>Continue</b></li>
+  </ol>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s2"><span class="stepnum">2</span>เปิดใช้งาน Authentication</h2>
+<div class="card">
+  <p>ส่วนนี้คือระบบล็อกอินของสัตวแพทย์</p>
+  <ol>
+    <li>เมนูด้านซ้าย หา <span class="path">Authentication</span>
+      (อาจอยู่ใต้หัวข้อ <b>Build</b> หรือ <b>Project shortcuts</b> แล้วแต่เวอร์ชันของหน้าจอ)</li>
+    <li>กด <b>Get started</b></li>
+    <li>แท็บ <b>Sign-in method</b> → ในรายการ Native providers กด <b>Email/Password</b></li>
+    <li>เปิดสวิตช์ตัวแรก <b>Enable</b> ให้เป็นสีฟ้า
+      <div class="warn" style="margin-top:8px">สวิตช์ตัวที่สอง <b>Email link (passwordless sign-in)</b>
+        <b>ไม่ต้องเปิด</b> — ระบบนี้ใช้รหัสผ่านอย่างเดียว</div>
+    </li>
+    <li>กด <b>Save</b></li>
+  </ol>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s3"><span class="stepnum">3</span>สร้าง Realtime Database</h2>
+<div class="card">
+  <div class="err">
+    ⚠ <b>ระวังสับสน</b> — Firebase มีฐานข้อมูล 2 แบบ ต้องเลือก <b>Realtime Database</b> เท่านั้น<br>
+    <b>ห้ามเลือก Cloud Firestore</b> เพราะระบบนี้เขียนขึ้นสำหรับ Realtime Database ถ้าเลือกผิดจะใช้งานไม่ได้เลย
+  </div>
+  <ol>
+    <li>เมนูด้านซ้าย หา <span class="path">Realtime Database</span>
+      (อยู่ใต้หัวข้อ <b>Build</b> หรือ <b>Databases &amp; Storage</b>)</li>
+    <li>กด <b>Create Database</b></li>
+    <li><b>Realtime Database location</b> → เลือก <b>Singapore (asia-southeast1)</b>
+      <div class="info" style="margin-top:8px">เลือกสิงคโปร์เพราะใกล้ไทยที่สุด ทำให้ระบบตอบสนองเร็ว
+        <b>เลือกแล้วเปลี่ยนไม่ได้</b> ต้องสร้างฐานข้อมูลใหม่</div>
+    </li>
+    <li>กด <b>Next</b></li>
+    <li>Security rules → เลือก <b>Start in locked mode</b> (ล็อกไว้ก่อน เดี๋ยวใส่กฎจริงในขั้นที่ 4)</li>
+    <li>กด <b>Enable</b></li>
+  </ol>
+  <div class="ok">
+    ✅ เสร็จแล้วจะเห็นแถบที่อยู่ฐานข้อมูลด้านบนตาราง หน้าตาประมาณ<br>
+    <code>https://psu-lasc-medicine-default-rtdb.asia-southeast1.firebasedatabase.app</code><br>
+    <b>คัดลอกเก็บไว้ จะได้ใช้ในขั้นที่ 6</b>
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s4"><span class="stepnum">4</span>วางกฎความปลอดภัย</h2>
+<div class="card">
+  <p>กฎนี้กำหนดว่าใครอ่านหรือเขียนอะไรได้บ้าง — <b>เป็นสิ่งเดียวที่ปกป้องข้อมูลจริง ๆ</b></p>
+  <ol>
+    <li>ในหน้า Realtime Database กดแท็บ <b>Rules</b></li>
+    <li>ลบข้อความเดิมทั้งหมด แล้ววางโค้ดด้านล่างนี้แทน (เหมือนกับไฟล์ <code>firebase-rules.json</code> ในโฟลเดอร์ระบบ)</li>
+    <li>กด <b>Publish</b></li>
+  </ol>
+
+<pre><code>{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "allowed": {
+      ".read": "auth != null",
+      ".write": false
+    },
+
+    "data": {
+      ".read":  "auth != null &amp;&amp; root.child('allowed').child(auth.uid).exists()",
+      ".write": "auth != null &amp;&amp; root.child('allowed').child(auth.uid).exists()",
+
+      "medicine": {
+
+        "public": {
+          ".read": true
+        },
+
+        "inbox": {
+          "$ref": {
+            ".write": "!data.exists()",
+            ".validate": "$ref.matches(/^REQ-[0-9]{8}-[A-Z0-9]{4}$/) &amp;&amp; newData.hasChildren(['ref','name','org','license','phone','email','startUse','items','createdAt']) &amp;&amp; newData.child('name').isString() &amp;&amp; newData.child('name').val().length &gt; 0 &amp;&amp; newData.child('name').val().length &lt;= 120 &amp;&amp; newData.child('org').isString() &amp;&amp; newData.child('org').val().length &lt;= 200 &amp;&amp; newData.child('license').isString() &amp;&amp; newData.child('license').val().length &lt;= 100 &amp;&amp; newData.child('phone').isString() &amp;&amp; newData.child('phone').val().length &lt;= 40 &amp;&amp; newData.child('email').isString() &amp;&amp; newData.child('email').val().matches(/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/) &amp;&amp; newData.child('email').val().length &lt;= 120 &amp;&amp; (!newData.hasChild('note') || newData.child('note').val().length &lt;= 2000) &amp;&amp; (!newData.hasChild('studyTitle') || newData.child('studyTitle').val().length &lt;= 300) &amp;&amp; (!newData.hasChild('addr') || newData.child('addr').val().length &lt;= 300)"
+          }
+        }
+
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="info">
+    <b>กฎนี้ทำอะไร</b>
+    <table style="margin-top:8px">
+      <tr><th style="width:230px">เส้นทาง</th><th>อ่าน</th><th>เขียน</th></tr>
+      <tr><td><code>data/**</code></td><td>เฉพาะผู้ที่มี UID ใน <code>allowed</code></td><td>เฉพาะผู้ที่มี UID ใน <code>allowed</code></td></tr>
+      <tr><td><code>data/medicine/public</code></td><td><b>ทุกคน</b> (มีแค่จำนวนวันตาม SOP กับรายชื่อยา ไม่มีราคาและข้อมูลส่วนบุคคล)</td><td>เฉพาะผู้มีสิทธิ์</td></tr>
+      <tr><td><code>data/medicine/inbox/{REQ-…}</code></td><td><b>อ่านไม่ได้จากภายนอก</b></td><td><b>สร้างใหม่ได้</b> แต่ทับหรือลบของเดิมไม่ได้</td></tr>
+    </table>
+  </div>
+  <div class="warn">
+    นักวิจัยที่มีลิงก์แบบฟอร์มส่งคำขอได้โดยไม่ต้องล็อกอิน ซึ่งเป็นเจตนาของการออกแบบ
+    กฎจึงจำกัดไว้ว่า <b>สร้างได้อย่างเดียว ตรวจรูปแบบรหัส ตรวจฟิลด์บังคับ และจำกัดความยาวทุกช่อง</b>
+    และคำขอทุกรายการ<b>ไม่เข้าทะเบียนจนกว่าสัตวแพทย์จะกด “รับเข้าระบบ”</b>
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s5"><span class="stepnum">5</span>ลงทะเบียนเว็บแอปและคัดลอกค่าเชื่อมต่อ</h2>
+<div class="card">
+  <ol>
+    <li>กดไอคอน <b>⚙️ เฟือง</b> ข้างคำว่า Project Overview → เลือก <b>Project settings</b></li>
+    <li>แท็บ <b>General</b> เลื่อนลงล่างสุดหาหัวข้อ <b>Your apps</b></li>
+    <li>กดไอคอน <b>&lt;/&gt;</b> (Web)</li>
+    <li>App nickname ใส่ <code>psu-lasc-medicine</code>
+      <div class="warn" style="margin-top:8px"><b>ไม่ต้องติ๊ก</b> “Also set up Firebase Hosting” — เราใช้ GitHub Pages อยู่แล้ว</div>
+    </li>
+    <li>กด <b>Register app</b></li>
+    <li>จะเห็นโค้ดชุดหนึ่ง <b>คัดลอกเฉพาะส่วนในวงเล็บปีกกาของ <code>firebaseConfig</code></b> เก็บไว้</li>
+  </ol>
+
+<pre><code>const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "psu-lasc-medicine.firebaseapp.com",
+  databaseURL: "https://psu-lasc-medicine-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "psu-lasc-medicine",
+  storageBucket: "psu-lasc-medicine.firebasestorage.app",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890"
+};</code></pre>
+
+  <div class="err">
+    ⚠ <b>ถ้าไม่เห็นบรรทัด <code>databaseURL</code></b> ให้ใช้ที่อยู่ที่คัดลอกไว้จากขั้นที่ 3 มาเติมเอง
+    <b>ขาดบรรทัดนี้ไม่ได้เด็ดขาด</b> เพราะระบบใช้ Realtime Database เป็นหลัก
+  </div>
+  <div class="info">
+    <b>ค่าชุดนี้ไม่ใช่ความลับ</b> — Firebase ออกแบบให้ฝังในหน้าเว็บได้โดยตรง ใครเปิดดูโค้ดหน้าเว็บก็เห็น
+    สิ่งที่ปกป้องข้อมูลคือกฎในขั้นที่ 4 ไม่ใช่การซ่อนค่าเหล่านี้
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s6"><span class="stepnum">6</span>แก้ไฟล์ firebase-config.js</h2>
+<div class="card">
+  <p>เปิดไฟล์ <code>firebase-config.js</code> ในโฟลเดอร์ <code>lasc-medicine</code> ด้วย Notepad หรือโปรแกรมแก้ข้อความใดก็ได้</p>
+  <p>หาส่วนนี้ แล้ว<b>วางค่าที่คัดลอกจากขั้นที่ 5 ทับลงไป</b></p>
+
+<pre><code>window.FIREBASE_CONFIG = {
+  apiKey: "<b>วางค่าใหม่</b>",
+  authDomain: "<b>วางค่าใหม่</b>",
+  databaseURL: "<b>วางค่าใหม่</b>",
+  projectId: "<b>วางค่าใหม่</b>",
+  storageBucket: "<b>วางค่าใหม่</b>",
+  messagingSenderId: "<b>วางค่าใหม่</b>",
+  appId: "<b>วางค่าใหม่</b>"
+};</code></pre>
+
+  <div class="warn">
+    <b>ข้อควรระวังตอนแก้</b>
+    <ul style="margin:6px 0 0">
+      <li>เครื่องหมาย <code>"</code> ครอบค่าทุกบรรทัด และ <code>,</code> ท้ายบรรทัด ต้องอยู่ครบ</li>
+      <li>บรรทัดสุดท้าย <code>appId</code> <b>ไม่มี</b> เครื่องหมาย <code>,</code></li>
+      <li>บันทึกเป็น <b>UTF-8</b> (Notepad: Save as → Encoding เลือก UTF-8)</li>
+      <li><b>ไม่ต้องแก้</b> <code>window.MEDICINE_ROOT</code> และ <code>window.MEDICINE_APP_URL</code> ด้านล่าง</li>
+    </ul>
+  </div>
+  <div class="ok">
+    ✅ ไฟล์นี้เป็น<b>ไฟล์เดียว</b>ที่ต้องแก้ — ทั้งระบบหลักและแบบฟอร์มนักวิจัยอ่านค่าจากที่นี่ร่วมกัน
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s7"><span class="stepnum">7</span>เพิ่มโดเมนที่อนุญาต</h2>
+<div class="card">
+  <div class="err">
+    ⚠ <b>ขั้นนี้คนพลาดบ่อยที่สุด</b> — ถ้าข้ามไป จะกดเข้าสู่ระบบแล้วไม่มีอะไรเกิดขึ้น หรือขึ้น error แปลก ๆ
+  </div>
+  <ol>
+    <li>กลับไปที่ <span class="path">Authentication</span></li>
+    <li>แท็บ <b>Settings</b> → เมนูย่อย <b>Authorized domains</b></li>
+    <li>กด <b>Add domain</b></li>
+    <li>ใส่ <code>kwanchanokd.github.io</code> → กด <b>Add</b></li>
+  </ol>
+  <div class="info">
+    ในรายการจะมี <code>localhost</code> และ <code>psu-lasc-medicine.firebaseapp.com</code> อยู่แล้ว ปล่อยไว้ได้
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s8"><span class="stepnum">8</span>สร้างบัญชีผู้ใช้</h2>
+<div class="card">
+  <ol>
+    <li>ที่ <span class="path">Authentication</span> → แท็บ <b>Users</b></li>
+    <li>กด <b>Add user</b></li>
+    <li>ใส่อีเมลของสัตวแพทย์ เช่น <code>kwanchanok.d@psu.ac.th</code></li>
+    <li>ตั้งรหัสผ่าน <b>อย่างน้อย 6 ตัวอักษร</b> (จดเก็บไว้ให้ดี)</li>
+    <li>กด <b>Add user</b></li>
+    <li>ในรายการจะมีคอลัมน์ <b>User UID</b> เป็นตัวอักษรยาว ๆ เช่น <code>kJ8xP2mNq...</code>
+      <b>กดคัดลอกเก็บไว้</b> จะใช้ในขั้นที่ 9</li>
+  </ol>
+  <div class="ok">
+    ✅ บัญชีนี้<b>แยกขาดจากระบบใบเสนอราคา</b> ตั้งรหัสผ่านใหม่ได้ตามใจ ไม่กระทบระบบอื่น
+  </div>
+  <div class="info">
+    <b>ผู้ใช้สมัครเองไม่ได้</b> — ระบบออกแบบให้ผู้ดูแลเป็นคนสร้างบัญชีให้เท่านั้น
+    เป็นการป้องกันคนนอกเข้าถึงข้อมูลคำขอและราคายา
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s9"><span class="stepnum">9</span>ให้สิทธิ์เข้าถึงข้อมูล</h2>
+<div class="card">
+  <div class="err">
+    ⚠ <b>ข้ามขั้นนี้ไม่ได้</b> — ถ้าไม่ทำ จะเข้าสู่ระบบได้ แต่ขึ้นข้อความว่า
+    “บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าถึงข้อมูล” และไม่เห็นข้อมูลอะไรเลย
+  </div>
+  <ol>
+    <li>ไปที่ <span class="path">Realtime Database</span> → แท็บ <b>Data</b></li>
+    <li>ชี้เมาส์ที่บรรทัดบนสุด (ที่อยู่ฐานข้อมูล) แล้วกดเครื่องหมาย <b>+</b> สีเขียว</li>
+    <li>ช่อง <b>Name</b> ใส่ <code>allowed</code> → <b>ช่อง Value เว้นว่างไว้</b></li>
+    <li>กด <b>+</b> อีกครั้งที่บรรทัดถัดเข้าไป (ใต้ <code>allowed</code>)</li>
+    <li>ช่อง <b>Name</b> วาง <b>User UID</b> ที่คัดลอกจากขั้นที่ 8<br>
+        ช่อง <b>Value</b> ใส่ <code>true</code></li>
+    <li>กด <b>Add</b></li>
+  </ol>
+  <p>ผลลัพธ์ที่ถูกต้องจะมีหน้าตาแบบนี้</p>
+<pre><code>psu-lasc-medicine-default-rtdb
+└── allowed
+    └── kJ8xP2mNq4RtY7wZ...: true</code></pre>
+  <div class="info">
+    <b>เพิ่มคนอื่นภายหลัง</b> — ทำซ้ำขั้นที่ 8 เพื่อสร้างบัญชี แล้วกลับมาเพิ่ม UID ของคนนั้นใต้
+    <code>allowed</code> อีกบรรทัด ไม่ต้องแก้โค้ดหรือกฎใด ๆ
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2 id="s10"><span class="stepnum">10</span>อัปโหลดและทดสอบ</h2>
+<div class="card">
+  <h3>อัปโหลดไฟล์ที่แก้แล้ว</h3>
+  <ol>
+    <li>เปิด <a href="https://github.com/kwanchanokd/psu-lasc-medicine" target="_blank">github.com/kwanchanokd/psu-lasc-medicine</a></li>
+    <li>กด <b>Add file → Upload files</b></li>
+    <li>ลากไฟล์ <code>firebase-config.js</code> ที่แก้แล้วลงไป</li>
+    <li>กด <b>Commit changes</b> แล้วรอ 1–2 นาทีให้ GitHub Pages สร้างเว็บใหม่</li>
+  </ol>
+
+  <h3>ทดสอบฝั่งสัตวแพทย์</h3>
+  <ol>
+    <li>เปิด <code>https://kwanchanokd.github.io/psu-lasc-medicine/</code>
+      <div class="warn" style="margin-top:8px">ถ้ายังเห็นของเก่า กด <b>Ctrl + Shift + R</b> เพื่อโหลดใหม่แบบข้ามแคช</div>
+    </li>
+    <li>กด <b>🔑 เข้าสู่ระบบ</b> ใส่อีเมลและรหัสผ่านจากขั้นที่ 8</li>
+    <li>ป้ายมุมขวาบนต้องเปลี่ยนเป็น <b>☁ ซิงก์แล้ว · อีเมลของท่าน</b></li>
+  </ol>
+
+  <h3>ทดสอบฝั่งนักวิจัย</h3>
+  <ol>
+    <li>เปิด <code>https://kwanchanokd.github.io/psu-lasc-medicine/request.html</code></li>
+    <li>กรอกข้อมูลทดสอบให้ครบ → กด <b>📨 ส่งคำขอ</b></li>
+    <li>ต้องได้รหัสอ้างอิงหน้าตา <code>REQ-25691002-XXXX</code></li>
+    <li>กลับไปที่ระบบหลัก แท็บ <b>📥 คำขอเข้าใหม่</b> → ต้องเห็นคำขอที่เพิ่งส่ง</li>
+    <li>ทดสอบเสร็จกด <b>✖ ตีกลับ / ลบ</b> ทิ้ง</li>
+  </ol>
+
+  <div class="ok">
+    ✅ ถ้าผ่านครบทุกข้อ = ติดตั้งสมบูรณ์ ระบบพร้อมใช้งานจริง
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2>🔧 แก้ปัญหาที่พบบ่อย</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:290px">อาการ</th><th>สาเหตุและวิธีแก้</th></tr>
+    <tr>
+      <td>ป้ายขึ้น <b>⚠ ไม่พบการตั้งค่า Firebase</b></td>
+      <td>ยังไม่ได้อัปโหลด <code>firebase-config.js</code> ขึ้น GitHub หรือไฟล์มีวงเล็บ/เครื่องหมายคำพูดไม่ครบ —
+          เปิดไฟล์ตรวจอีกครั้งตามข้อควรระวังในขั้นที่ 6</td>
+    </tr>
+    <tr>
+      <td>กดเข้าสู่ระบบแล้ว<b>ไม่มีอะไรเกิดขึ้น</b></td>
+      <td>ยังไม่ได้ทำขั้นที่ 7 — เพิ่ม <code>kwanchanokd.github.io</code> ใน Authorized domains</td>
+    </tr>
+    <tr>
+      <td><b>อีเมลหรือรหัสผ่านไม่ถูกต้อง</b></td>
+      <td>ตรวจที่ Authentication → Users ว่ามีอีเมลนี้จริงและสะกดตรงกัน
+          ถ้าจำรหัสไม่ได้ กด <b>⋮</b> ท้ายแถว → <b>Reset password</b></td>
+    </tr>
+    <tr>
+      <td><b>บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าถึงข้อมูล</b></td>
+      <td>ยังไม่ได้ทำขั้นที่ 9 หรือ UID ที่ใส่ไม่ตรง — คัดลอก UID จากหน้า Users มาใหม่ ระวังช่องว่างติดมาด้วย</td>
+    </tr>
+    <tr>
+      <td>ฟอร์มนักวิจัยขึ้น <b>ส่งคำขอไม่สำเร็จ</b></td>
+      <td>ยังไม่ได้กด <b>Publish</b> กฎในขั้นที่ 4 หรือวางกฎผิดตำแหน่ง —
+          เปิดแท็บ Rules ดูว่าไม่มีจุดแดงแสดงข้อผิดพลาด</td>
+    </tr>
+    <tr>
+      <td>ช่องชื่อยาใน<b>ฟอร์มไม่มีรายการแนะนำ</b></td>
+      <td>ยังไม่เคยเข้าสู่ระบบในระบบหลักหลังติดตั้ง — ล็อกอิน 1 ครั้ง ระบบจะส่งรายชื่อยาขึ้นคลาวด์ให้เอง</td>
+    </tr>
+    <tr>
+      <td>ฐานข้อมูลสร้างผิดเป็น <b>Firestore</b></td>
+      <td>กลับไปสร้าง <b>Realtime Database</b> ใหม่ตามขั้นที่ 3 — Firestore ที่สร้างไว้ปล่อยทิ้งได้ ไม่เสียค่าใช้จ่าย</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================================= -->
+<h2>💰 โควตาแพ็กเกจฟรี (Spark)</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:240px">รายการ</th><th>โควตาฟรี</th><th>ระบบนี้ใช้จริงประมาณ</th></tr>
+    <tr><td>พื้นที่เก็บข้อมูล</td><td>1 GB</td><td>ไม่ถึง 1 MB ต่อปี</td></tr>
+    <tr><td>ปริมาณดาวน์โหลด</td><td>10 GB / เดือน</td><td>ไม่ถึง 10 MB / เดือน</td></tr>
+    <tr><td>การเชื่อมต่อพร้อมกัน</td><td>100 เครื่อง</td><td>1–3 เครื่อง</td></tr>
+    <tr><td>บัญชีผู้ใช้</td><td>ไม่จำกัด</td><td>1–5 บัญชี</td></tr>
+  </table>
+  <div class="ok">
+    ✅ <b>ไม่มีทางเกินโควตา</b> และไม่ต้องผูกบัตรเครดิต
+  </div>
+  <div class="warn">
+    สิ่งเดียวที่แพ็กเกจฟรีทำไม่ได้คือ <b>Cloud Functions</b> ซึ่งใช้ส่งอีเมลอัตโนมัติ —
+    ระบบจึงเลี่ยงไปใช้ปุ่มร่างอีเมลจาก Outlook ของสัตวแพทย์เอง และเตรียมทางเลือกต่อ n8n ไว้
+    (ดูไฟล์ <code>n8n-setup.md</code>)
+  </div>
+</div>
+
+<!-- ============================================= -->
+<h2>✅ รายการตรวจสอบก่อนใช้งานจริง</h2>
+<div class="card">
+  <ul class="chk">
+    <li>สร้างโปรเจกต์ <code>psu-lasc-medicine</code> แล้ว</li>
+    <li>เปิด Email/Password ใน Authentication แล้ว</li>
+    <li>สร้าง <b>Realtime Database</b> ที่ Singapore แล้ว (ไม่ใช่ Firestore)</li>
+    <li>วางกฎความปลอดภัยและกด <b>Publish</b> แล้ว</li>
+    <li>คัดลอก firebaseConfig ครบทุกบรรทัด <b>รวม databaseURL</b></li>
+    <li>แก้ <code>firebase-config.js</code> และบันทึกเป็น UTF-8 แล้ว</li>
+    <li>เพิ่ม <code>kwanchanokd.github.io</code> ใน Authorized domains แล้ว</li>
+    <li>สร้างบัญชีสัตวแพทย์พร้อมรหัสผ่านแล้ว</li>
+    <li>ใส่ User UID ใต้ <code>allowed</code> ค่าเป็น <code>true</code> แล้ว</li>
+    <li>อัปโหลด <code>firebase-config.js</code> ขึ้น GitHub แล้ว</li>
+    <li>ทดสอบเข้าสู่ระบบ และส่งคำขอทดสอบผ่านแล้ว</li>
+    <li>ลบคำขอทดสอบทิ้งแล้ว</li>
+  </ul>
+</div>
+
+<footer>
+  ระบบบริการยาและเวชภัณฑ์เพื่องานวิจัย · ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์<br>
+  ตามมาตรฐานขั้นตอนการปฏิบัติงาน SOP MED101
+</footer>
+</body>
+</html>

@@ -761,10 +761,12 @@
     </div>
     <div class="card-body">
       <div class="alert warn">
-        <b>ข้อสังเกตเรื่องระยะเวลายื่นคำขอ</b> — เนื้อความข้อ 6.1 ของ SOP ระบุ “ก่อนวันเริ่มใช้ยาอย่างน้อย 30 วัน”
-        ขณะที่ผังขั้นตอนในหน้าถัดไปของ SOP ฉบับเดียวกันระบุ “14 วัน”
-        ระบบตั้งค่าเริ่มต้นไว้ที่ 30 วันตามเนื้อความ และเปิดให้แก้ไขได้ที่หน้า “ตั้งค่าระบบ”
-        <b>ควรปรับ SOP ให้ตรงกันในการทบทวนฉบับถัดไป</b>
+        <b>ระยะเวลายื่นคำขอ — เกณฑ์ที่ใช้จริงคือ 14 วัน</b><br>
+        SOP ฉบับปัจจุบันระบุไม่ตรงกันภายในเอกสารเดียว เนื้อความข้อ 6.1 ระบุ “อย่างน้อย 30 วัน”
+        ขณะที่ผังขั้นตอนข้อ 7 ระบุ “14 วัน”
+        หน่วยงานได้พิจารณาแล้วให้ใช้ <b>14 วัน ตามผังขั้นตอน</b> และระบบตั้งค่าตามนี้
+        <b>ควรแก้เนื้อความข้อ 6.1 ให้เป็น 14 วัน ในการทบทวน SOP ฉบับถัดไป</b>
+        (แก้ค่าได้ที่หน้า “ตั้งค่าระบบ” หากมีการเปลี่ยนแปลงภายหลัง)
       </div>
 
       <div class="sec-title">1. วัตถุประสงค์</div>
@@ -906,13 +908,16 @@
 <div id="printArea"></div>
 <div class="toast" id="toast"></div>
 
+<!-- ค่าเชื่อมต่อ Firebase — แก้โปรเจกต์ได้ที่ไฟล์นี้ไฟล์เดียว ทั้งระบบหลักและแบบฟอร์มนักวิจัย -->
+<script src="firebase-config.js"></script>
+
 <script>
 /* =====================================================================
    ระบบบริการยาและเวชภัณฑ์เพื่องานวิจัย — ศูนย์บริการสัตว์ทดลอง ม.อ.
    อ้างอิง SOP รหัส MED101 (ข้อปฏิบัติในการขอซื้อยาและเวชภัณฑ์เพื่อใช้ในงานวิจัย)
    เก็บข้อมูลในเครื่องด้วย localStorage — ไม่มีการส่งข้อมูลออกนอกเครื่อง
    ===================================================================== */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.5.0';
 const STORE_KEY = 'psu-lasc-medicine-v1';
 
 /* ---------------- ค่าตั้งต้น ---------------- */
@@ -928,7 +933,7 @@ const DEFAULT_SETTINGS = {
   vetLicense: '01-7235/2553',
   checker: '',
   approver: '',
-  leadDays: 30,
+  leadDays: 14,
   payDays: 7,
   buyDays: 7,
   receiptDays: 14,
@@ -983,9 +988,10 @@ let cur = null;      /* คำขอที่กำลังแก้ไข */
 let curItems = [];   /* รายการยาในคำขอปัจจุบัน */
 
 /* ---------------- โหลด / บันทึก ---------------- */
+const DB_VERSION = 2;   /* 2 = ระยะเวลายื่นคำขอล่วงหน้าเปลี่ยนจาก 30 เป็น 14 วัน ตามมติของหน่วยงาน */
 function blankDb() {
   return {
-    version: 1,
+    version: DB_VERSION,
     settings: Object.assign({}, DEFAULT_SETTINGS),
     drugs: DEFAULT_DRUGS.map((d, i) => Object.assign({ id:'d' + (i+1), stock:0, expiry:'', vendor:'' }, d)),
     requests: [],
@@ -1002,7 +1008,15 @@ function load() {
     db.settings = Object.assign({}, DEFAULT_SETTINGS, obj.settings || {});
     if (!Array.isArray(db.drugs) || !db.drugs.length) db.drugs = blankDb().drugs;
     if (!Array.isArray(db.requests)) db.requests = [];
+    migrate();
   } catch (e) { db = blankDb(); }
+}
+/* ปรับข้อมูลเดิมให้ตรงกับเกณฑ์ปัจจุบัน — ทำครั้งเดียวต่อเครื่อง */
+function migrate() {
+  if (num(db.version) >= DB_VERSION) return;
+  // หน่วยงานกำหนดให้ยื่นล่วงหน้า 14 วันตามผังขั้นตอน SOP แทนค่าเดิม 30 วัน
+  if (num(db.settings.leadDays) === 30) db.settings.leadDays = 14;
+  db.version = DB_VERSION;
 }
 function save() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); }
@@ -2397,20 +2411,11 @@ function publishPublicConfig() {
 
 /* =====================================================================
    Cloud sync (Firebase Realtime Database)
-   ใช้โปรเจกต์ Firebase เดียวกับ “ระบบตรวจติดตามการดำเนินการต่อสัตว์ฯ” และ “ระบบใบเสนอราคา”
-   จึงใช้อีเมล/รหัสผ่านชุดเดียวกันได้ และเก็บข้อมูลแยกไว้ใต้ data/medicine
+   ค่าเชื่อมต่อทั้งหมดอยู่ในไฟล์ firebase-config.js ไฟล์เดียว
+   เปลี่ยนโปรเจกต์ Firebase ได้โดยแก้ไฟล์นั้นที่เดียว ไม่ต้องแตะไฟล์นี้
    ===================================================================== */
-window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAdC4jcKj8GBEWR1lOFDZQA_Y90M4FXNt8",
-  authDomain: "psu-lasc-animal.firebaseapp.com",
-  databaseURL: "https://psu-lasc-animal-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "psu-lasc-animal",
-  storageBucket: "psu-lasc-animal.firebasestorage.app",
-  messagingSenderId: "726169505667",
-  appId: "1:726169505667:web:a5f7401be7ed1e809f30b6"
-};
-const CLOUD_ROOT = 'data/medicine';   // แยกจาก data/projects และ data/quotation ของแอปอื่น
-const APP_URL = 'https://kwanchanokd.github.io/psu-lasc-medicine/';
+const CLOUD_ROOT = window.MEDICINE_ROOT || 'data/medicine';
+const APP_URL = window.MEDICINE_APP_URL || 'https://kwanchanokd.github.io/psu-lasc-medicine/';
 
 let fb = null;                 // ฟังก์ชันจาก Firebase SDK
 let cloudUser = null;          // ผู้ใช้ที่ล็อกอินอยู่
@@ -2479,7 +2484,7 @@ async function doLogout() {
 /* ---------- ส่งข้อมูลขึ้นคลาวด์ ---------- */
 /* ข้อมูลหลัก = การตั้งค่าตาม SOP + บัญชียาและราคา (หน่วงไว้เล็กน้อยไม่ให้เขียนถี่เกินไป) */
 function masterPayload() {
-  return { settings: db.settings, drugs: db.drugs, updatedAt: new Date().toISOString() };
+  return { settings: db.settings, drugs: db.drugs, policyVersion: DB_VERSION, updatedAt: new Date().toISOString() };
 }
 function cloudPushMaster() {
   if (!cloudReady()) return;
@@ -2562,9 +2567,15 @@ function applyCloudRequests(remote) {
 function applyCloudMaster(m) {
   if (!m) return;
   applyingSnapshot = true;
+  let needRepublish = false;
   try {
     if (m.settings) db.settings = Object.assign({}, DEFAULT_SETTINGS, m.settings);
     if (Array.isArray(m.drugs) && m.drugs.length) db.drugs = m.drugs;
+    // ข้อมูลหลักบนคลาวด์ที่บันทึกไว้ก่อนเปลี่ยนเกณฑ์ ยังเป็น 30 วัน — ปรับให้เป็น 14 วันครั้งเดียว
+    if (num(m.policyVersion) < DB_VERSION) {
+      if (num(db.settings.leadDays) === 30) db.settings.leadDays = 14;
+      needRepublish = true;
+    }
     save();
     applySettingsHints(); fillPicker(); renderDash();
     // ไม่เขียนทับฟอร์มขณะที่ผู้ใช้กำลังแก้ไขอยู่หน้านั้น
@@ -2572,6 +2583,8 @@ function applyCloudMaster(m) {
     if (!$('page-drugs').classList.contains('active')) renderDrugs();
     renderSop();
   } finally { applyingSnapshot = false; }
+  // ส่งค่าที่ปรับแล้วกลับขึ้นคลาวด์ หลังปลดล็อก applyingSnapshot เพื่อให้ cloudReady() ผ่าน
+  if (needRepublish) setTimeout(() => { cloudPushMaster(); publishPublicConfig(); }, 0);
 }
 
 /* ---------- เรียกโดย module script เมื่อโหลด Firebase SDK เสร็จ ---------- */
@@ -2688,7 +2701,12 @@ document.addEventListener('DOMContentLoaded', init);
 /* โหลด Firebase SDK แล้วส่งฟังก์ชันที่ต้องใช้กลับไปให้สคริปต์หลัก */
 (async () => {
   const cfg = window.FIREBASE_CONFIG;
-  if (!cfg || !cfg.apiKey || !cfg.databaseURL) return;   // ยังไม่ได้ตั้งค่า = ใช้งานแบบเก็บในเครื่องอย่างเดียว
+  if (!cfg || !cfg.apiKey || !cfg.databaseURL) {
+    // ไม่พบ firebase-config.js หรือยังไม่ได้ใส่ค่า = ใช้งานแบบเก็บในเครื่องอย่างเดียว
+    const chip = document.getElementById('cloudChip');
+    if (chip) { chip.className = 'sync-chip err'; chip.textContent = '⚠ ไม่พบการตั้งค่า Firebase (ใช้งานแบบเก็บในเครื่อง)'; }
+    return;
+  }
   const V = 'https://www.gstatic.com/firebasejs/10.12.5/';
   try {
     const [appMod, authMod, dbMod] = await Promise.all([

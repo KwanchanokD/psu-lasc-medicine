@@ -301,6 +301,9 @@
 <div id="printArea" style="display:none"></div>
 <div class="toast" id="toast"></div>
 
+<!-- ค่าเชื่อมต่อ Firebase — ไฟล์เดียวกับที่ระบบหลักใช้ -->
+<script src="firebase-config.js"></script>
+
 <script>
 /* =====================================================================
    แบบฟอร์มยื่นคำขอซื้อยาและเวชภัณฑ์ (สำหรับนักวิจัย — ไม่ต้องเข้าสู่ระบบ)
@@ -308,18 +311,12 @@
    อ่านค่าพารามิเตอร์ตาม SOP และรายชื่อยาจาก data/medicine/public/config
    สัตวแพทย์จะเห็นคำขอในแท็บ “คำขอเข้าใหม่” ของระบบหลักเพื่อตรวจสอบก่อนรับเข้าทะเบียน
    ===================================================================== */
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAdC4jcKj8GBEWR1lOFDZQA_Y90M4FXNt8",
-  authDomain: "psu-lasc-animal.firebaseapp.com",
-  databaseURL: "https://psu-lasc-animal-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "psu-lasc-animal",
-  storageBucket: "psu-lasc-animal.firebasestorage.app",
-  messagingSenderId: "726169505667",
-  appId: "1:726169505667:web:a5f7401be7ed1e809f30b6"
-};
-const DB_URL  = FIREBASE_CONFIG.databaseURL.replace(/\/$/, '');
-const INBOX   = DB_URL + '/data/medicine/inbox';
-const CONFIG  = DB_URL + '/data/medicine/public/config.json';
+/* ค่าเชื่อมต่อมาจากไฟล์ firebase-config.js ที่โหลดไว้ก่อนหน้า — แก้โปรเจกต์ได้ที่ไฟล์นั้นที่เดียว */
+const FIREBASE_CONFIG = window.FIREBASE_CONFIG || {};
+const ROOT    = window.MEDICINE_ROOT || 'data/medicine';
+const DB_URL  = String(FIREBASE_CONFIG.databaseURL || '').replace(/\/$/, '');
+const INBOX   = DB_URL + '/' + ROOT + '/inbox';
+const CONFIG  = DB_URL + '/' + ROOT + '/public/config.json';
 
 /* Webhook สำหรับส่งอีเมลแจ้งเตือนอัตโนมัติ (n8n / Power Automate / บริการอื่น)
    ปล่อยว่างไว้ = ไม่ส่ง ระบบยังทำงานได้ครบตามปกติ
@@ -329,7 +326,7 @@ const CONFIG  = DB_URL + '/data/medicine/public/config.json';
 const WEBHOOK_URL = '';   /* ← วาง Production URL ของ n8n Webhook ตรงนี้ (ดู n8n-setup.md) */
 
 /* ค่าตั้งต้น ใช้เมื่ออ่านค่าจากคลาวด์ไม่ได้ */
-let cfg = { leadDays: 30, payDays: 7, buyDays: 7, drugs: [] };
+let cfg = { leadDays: 14, payDays: 7, buyDays: 7, drugs: [] };
 let items = [];
 let submitting = false;
 
@@ -614,6 +611,13 @@ function applyConfig() {
 function init() {
   addRow();
   applyConfig();
+  if (!DB_URL) {
+    // ไม่พบ firebase-config.js หรือยังไม่ได้ใส่ databaseURL — ส่งคำขอไม่ได้ จึงต้องแจ้งให้ชัด
+    renderAlerts([{ t:'err', h:'<b>ระบบยังไม่พร้อมรับคำขอ</b> — ไม่พบการตั้งค่าการเชื่อมต่อฐานข้อมูล<br>' +
+      'กรุณาติดต่อสัตวแพทย์ประจำเรือนเลี้ยงสัตว์ทดลองเพื่อยื่นคำขอโดยตรง' }]);
+    $('submitBtn').disabled = true;
+    return;
+  }
   loadConfig();
   $('fStartUse').min = todayIso();
   $('fStartUse').addEventListener('change', checkLead);
