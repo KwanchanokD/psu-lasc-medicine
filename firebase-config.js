@@ -56,3 +56,22 @@ window.MEDICINE_ROOT = 'data/medicine';
 
 /* ที่อยู่ของระบบเมื่อเผยแพร่แล้ว — ใช้ในข้อความแจ้งเตือนและลิงก์แบบฟอร์ม */
 window.MEDICINE_APP_URL = 'https://kwanchanokd.github.io/psu-lasc-medicine/';
+
+/* ---------------------------------------------------------------------------
+   การแจ้งเตือนอัตโนมัติเมื่อมีคำขอใหม่ (LINE OA + อีเมล)
+   ---------------------------------------------------------------------------
+   ปล่อยว่างทั้งคู่ = ไม่แจ้งเตือน ระบบยังทำงานครบทุกอย่างตามปกติ
+   สัตวแพทย์ยังเห็นคำขอในแท็บ “คำขอเข้าใหม่” เสมอ
+
+   วิธีเปิดใช้งาน (ดูขั้นตอนละเอียดในไฟล์ วิธีติดตั้ง-แจ้งเตือน.html)
+     1. สร้าง LINE Official Account และเปิด Messaging API
+     2. นำโค้ดในไฟล์ line-email-notify.gs ไปวางที่ script.google.com
+        แล้ว Deploy เป็น Web app
+     3. นำ Web app URL มาใส่ที่ NOTIFY_WEBHOOK_URL ด้านล่าง
+     4. ตั้ง NOTIFY_SECRET ให้ตรงกับค่าที่ใส่ในสคริปต์
+
+   หมายเหตุ: รหัสลับนี้กันการยิงข้อมูลขยะเข้ามาเท่านั้น ไม่ใช่กุญแจของ LINE
+   กุญแจจริงของ LINE เก็บอยู่ฝั่ง Google Apps Script ไม่ปรากฏในหน้าเว็บ
+   ------------------------------------------------------------------------ */
+window.NOTIFY_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxHL0rQzMmqNn5rYg_SUNiaKmvAYDat2QVApmlBZx-wH9duThEQZIWLmia0wiyvLj8bGw/exec';
+window.NOTIFY_SECRET = 'lasc-med-7k2pq9xw';

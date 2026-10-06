@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>วิธีติดตั้งการแจ้งเตือน LINE และอีเมล — ระบบบริการยาและเวชภัณฑ์ PSU:LASC</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family:'Sarabun',Tahoma,sans-serif; max-width:900px; margin:0 auto; padding:24px; color:#2c3e50; line-height:1.8; background:#f4f6f9; }
+  h1 { color:#0a5f4e; font-size:23px; }
+  h2 { color:#0e7c66; font-size:18.5px; margin-top:32px; border-bottom:2px solid #dfe6ee; padding-bottom:6px; }
+  h3 { color:#0a5f4e; font-size:15.5px; margin-top:20px; }
+  .card { background:#fff; border:1px solid #dfe6ee; border-radius:10px; padding:18px 22px; margin:14px 0; }
+  code { background:#eef2f6; padding:2px 8px; border-radius:6px; font-size:14px; font-family:Consolas,Monaco,monospace; }
+  pre { background:#1e2a35; color:#e6edf3; padding:14px 16px; border-radius:9px; overflow-x:auto; font-size:13px; line-height:1.6; }
+  pre code { background:none; color:inherit; padding:0; }
+  .warn { background:#fffbea; border:1px solid #f5e6a8; border-radius:8px; padding:11px 15px; color:#7a6410; margin:12px 0; }
+  .ok   { background:#eafaf5; border:1px solid #a8e0cf; border-radius:8px; padding:11px 15px; color:#0a5c4a; margin:12px 0; }
+  .err  { background:#fdecea; border:1px solid #f5c6cb; border-radius:8px; padding:11px 15px; color:#9c0006; margin:12px 0; }
+  .info { background:#e8f1fa; border:1px solid #b9d4ee; border-radius:8px; padding:11px 15px; color:#124a82; margin:12px 0; }
+  ol li, ul li { margin-bottom:7px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin-top:10px; }
+  th, td { border:1px solid #dfe6ee; padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:#eafaf5; color:#0a5f4e; }
+  .stepnum { display:inline-block; width:30px; height:30px; border-radius:50%; background:#0e7c66; color:#fff;
+             text-align:center; line-height:30px; font-weight:700; margin-right:8px; font-size:15px; }
+  .part { background:#0a5f4e; color:#fff; padding:5px 14px; border-radius:7px; font-size:14px; display:inline-block; }
+  .path { background:#0e7c66; color:#fff; padding:3px 10px; border-radius:6px; font-size:13.5px; display:inline-block; margin:2px 0; }
+  .chk { list-style:none; padding:0; }
+  .chk li { padding-left:30px; position:relative; margin-bottom:9px; }
+  .chk li::before { content:'☐'; position:absolute; left:4px; font-size:17px; color:#0e7c66; }
+  .flow { background:#fff; border:1px dashed #0e7c66; border-radius:10px; padding:16px; font-family:Consolas,Monaco,monospace;
+          font-size:13px; line-height:1.9; white-space:pre; overflow-x:auto; color:#0a5f4e; }
+  footer { text-align:center; color:#7f8c8d; font-size:12.5px; margin-top:36px; }
+</style>
+</head>
+<body>
+
+<h1>🔔 วิธีติดตั้งการแจ้งเตือน LINE และอีเมล</h1>
+
+<div class="card">
+  เมื่อนักวิจัยกดส่งคำขอผ่านแบบฟอร์ม ระบบจะแจ้งเตือนสัตวแพทย์ทันที <b>3 ทางพร้อมกัน</b>
+
+  <table>
+    <tr><th style="width:170px">ช่องทาง</th><th>สิ่งที่ได้รับ</th></tr>
+    <tr><td>📱 <b>LINE OA</b></td><td>ข้อความสรุปคำขอ ชื่อผู้ขอ รายการยา และคำเตือนถ้ายื่นกระชั้น</td></tr>
+    <tr><td>📧 <b>อีเมล</b></td><td>รายละเอียดครบทุกช่อง พร้อมตารางรายการยาและปุ่มเปิดระบบ</td></tr>
+    <tr><td>📊 <b>Google Sheets</b></td><td>บันทึกลงชีตอัตโนมัติ (ไม่บังคับ — เปิดใช้ก็ได้ ไม่เปิดก็ได้)</td></tr>
+  </table>
+
+  <table style="margin-top:14px">
+    <tr><th style="width:170px">ใช้เวลา</th><td>ประมาณ 30–40 นาที ทำครั้งเดียวจบ</td></tr>
+    <tr><th>ค่าใช้จ่าย</th><td><b>ไม่มี</b> — ทั้ง LINE OA และ Google Apps Script ใช้แพ็กเกจฟรี</td></tr>
+    <tr><th>ต้องมี</th><td>บัญชี LINE · บัญชี Google · สิทธิ์แก้ไขรีโป GitHub</td></tr>
+  </table>
+</div>
+
+<h2>ระบบทำงานอย่างไร</h2>
+<div class="card">
+<div class="flow">นักวิจัยกดส่งคำขอ
+      │
+      ├──→ Firebase  (บันทึกคำขอ — ทำงานเสมอ)
+      │        └──→ แท็บ "คำขอเข้าใหม่" ของสัตวแพทย์
+      │
+      └──→ Google Apps Script  (ตัวกลางแจ้งเตือน)
+               ├──→ LINE Official Account
+               ├──→ อีเมล
+               └──→ Google Sheets (ถ้าเปิดใช้)</div>
+
+  <div class="err" style="margin-top:14px">
+    <b>ทำไมต้องมีตัวกลาง ไม่ส่ง LINE ตรงจากหน้าเว็บ</b><br>
+    การส่ง LINE ต้องใช้ <b>Channel Access Token</b> ซึ่งเป็นกุญแจที่ส่งข้อความในนาม OA ได้
+    ถ้าฝังไว้ในหน้าเว็บ <b>ใครเปิดดูโค้ดหน้าเว็บก็เห็นและนำไปใช้ได้ทันที</b>
+    Google Apps Script รันอยู่บนเครื่องของ Google จึงเก็บกุญแจไว้ได้อย่างปลอดภัย
+  </div>
+
+  <div class="ok">
+    <b>ระบบไม่ขึ้นกับการแจ้งเตือน</b> — ถ้า Apps Script ล่มหรือยังไม่ได้ตั้งค่า
+    คำขอยังบันทึกลง Firebase และขึ้นในแท็บ “คำขอเข้าใหม่” ตามปกติทุกประการ
+    การแจ้งเตือนเป็นของแถม ไม่ใช่เส้นทางหลักของข้อมูล
+  </div>
+
+  <div class="warn">
+    <b>หมายเหตุ</b> — <b>LINE Notify ปิดให้บริการแล้วตั้งแต่ 31 มีนาคม 2568</b>
+    จึงต้องใช้ LINE Official Account ร่วมกับ Messaging API แทน ซึ่งเป็นวิธีที่คู่มือนี้ใช้
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2><span class="part">ส่วนที่ 1</span> &nbsp;สร้าง LINE Official Account</h2>
+
+<h3><span class="stepnum">1</span>สร้างบัญชี LINE OA</h3>
+<div class="card">
+  <ol>
+    <li>เปิด <a href="https://manager.line.biz" target="_blank">manager.line.biz</a> → ลงชื่อเข้าใช้ด้วยบัญชี LINE ของท่าน</li>
+    <li>กด <b>สร้างบัญชีใหม่</b> (Create new account)</li>
+    <li>กรอกข้อมูล
+      <ul>
+        <li><b>ชื่อบัญชี</b> เช่น <code>PSU LASC บริการยาและเวชภัณฑ์</code></li>
+        <li><b>ประเภทธุรกิจ</b> เลือกการศึกษา หรือใกล้เคียง</li>
+      </ul>
+    </li>
+    <li>กด <b>สร้างบัญชี</b> — จะได้ OA แบบฟรีทันที ไม่ต้องยืนยันตัวตน</li>
+  </ol>
+</div>
+
+<h3><span class="stepnum">2</span>เปิด Messaging API</h3>
+<div class="card">
+  <ol>
+    <li>ใน LINE OA Manager → เมนู <b>ตั้งค่า</b> (Settings) มุมขวาบน</li>
+    <li>เมนูซ้าย → <span class="path">Messaging API</span></li>
+    <li>กด <b>ใช้ Messaging API</b> (Enable Messaging API)</li>
+    <li>เลือก <b>Provider</b> — ถ้ายังไม่มี ให้สร้างใหม่ ตั้งชื่อเช่น <code>PSU LASC</code></li>
+    <li>กด <b>ตกลง</b> จนจบ</li>
+  </ol>
+  <div class="info">
+    Provider คือ “เจ้าของแอป” ในระบบของ LINE สร้างครั้งเดียวใช้ได้กับทุก OA ของหน่วยงาน
+  </div>
+</div>
+
+<h3><span class="stepnum">3</span>ออก Channel Access Token</h3>
+<div class="card">
+  <ol>
+    <li>เปิด <a href="https://developers.line.biz/console/" target="_blank">developers.line.biz/console</a></li>
+    <li>เลือก Provider ที่สร้างไว้ → เลือก Channel ของ OA นี้</li>
+    <li>แท็บ <b>Messaging API</b> → เลื่อนลงล่างสุดหา <b>Channel access token (long-lived)</b></li>
+    <li>กด <b>Issue</b> → จะได้ข้อความยาวมาก <b>กดคัดลอกเก็บไว้</b></li>
+  </ol>
+  <div class="err">
+    🔑 <b>token นี้คือกุญแจ ห้ามส่งให้ใคร ห้ามวางในหน้าเว็บ ห้าม commit ขึ้น GitHub</b><br>
+    ใช้วางในขั้นที่ 5 เท่านั้น ซึ่งเก็บไว้ฝั่ง Google ไม่ปรากฏต่อผู้ใช้เว็บ<br>
+    ถ้าเผลอหลุดออกไป ให้กลับมาที่หน้านี้แล้วกด <b>Reissue</b> เพื่อยกเลิกตัวเก่าทันที
+  </div>
+</div>
+
+<h3><span class="stepnum">4</span>เพิ่ม OA เป็นเพื่อน และปิดข้อความตอบกลับอัตโนมัติ</h3>
+<div class="card">
+  <div class="warn">
+    ⚠ <b>ขั้นนี้ห้ามข้าม</b> — ระบบส่งแบบ <b>broadcast</b> คือส่งถึงทุกคนที่เป็นเพื่อนกับ OA
+    ถ้าไม่มีใครเป็นเพื่อนเลย ข้อความจะไม่ถึงใคร
+  </div>
+  <ol>
+    <li>กลับไปที่ LINE OA Manager → หน้า <b>โฮม</b></li>
+    <li>หา <b>QR code เพิ่มเพื่อน</b> หรือลิงก์ <code>line.me/R/ti/p/@...</code></li>
+    <li>ให้<b>สัตวแพทย์และผู้เกี่ยวข้องทุกคนสแกนเพิ่มเป็นเพื่อน</b></li>
+    <li>แนะนำให้ปิดข้อความอัตโนมัติ เพื่อไม่ให้รบกวน
+      <ul>
+        <li>ตั้งค่า → <b>การตอบกลับ</b> → ปิด <b>ข้อความต้อนรับ</b> และ <b>ตอบกลับอัตโนมัติ</b></li>
+      </ul>
+    </li>
+  </ol>
+  <div class="ok">
+    ✅ ใครเพิ่มเป็นเพื่อนก็ได้รับแจ้งเตือน — เพิ่มคนทีหลังได้ตลอด ไม่ต้องแก้โค้ดใด ๆ
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2><span class="part">ส่วนที่ 2</span> &nbsp;ตั้งค่า Google Apps Script</h2>
+
+<h3><span class="stepnum">5</span>สร้างโปรเจกต์และวางโค้ด</h3>
+<div class="card">
+  <ol>
+    <li>เปิด <a href="https://script.google.com" target="_blank">script.google.com</a> → ลงชื่อเข้าใช้ด้วยบัญชี Google</li>
+    <li>กด <b>New project</b></li>
+    <li>ตั้งชื่อโปรเจกต์ (มุมซ้ายบน) ว่า <code>PSU LASC แจ้งเตือนคำขอซื้อยา</code></li>
+    <li>ลบโค้ดตัวอย่างใน <code>Code.gs</code> ออกให้หมด</li>
+    <li>เปิดไฟล์ <b><code>line-email-notify.gs</code></b> ในโฟลเดอร์ระบบด้วย Notepad
+        → คัดลอก<b>ทั้งไฟล์</b> → วางลงไปแทน</li>
+    <li>กด <b>💾 Save</b></li>
+  </ol>
+</div>
+
+<h3><span class="stepnum">6</span>ใส่ค่าตั้งต้นแล้วรันหนึ่งครั้ง</h3>
+<div class="card">
+  <p>เลื่อนหาฟังก์ชัน <code>ตั้งค่าครั้งแรก()</code> ใกล้ ๆ ด้านบนของไฟล์ แล้วแก้ 4 ค่านี้</p>
+<pre><code>LINE_TOKEN:    'วาง token จากขั้นที่ 3 ตรงนี้'
+VET_EMAIL:     'kwanchanok.d@psu.ac.th'
+NOTIFY_SECRET: 'lasc-med-8f3kqz91'      ← ตั้งเองให้เดายาก จำไว้ใช้ขั้นที่ 9
+SHEET_ID:      ''                        ← เว้นว่างไว้ก่อนได้</code></pre>
+  <ol>
+    <li>กด <b>💾 Save</b></li>
+    <li>ช่องเลือกฟังก์ชันด้านบน เลือก <b><code>ตั้งค่าครั้งแรก</code></b></li>
+    <li>กด <b>▶ Run</b></li>
+    <li>ครั้งแรกจะขึ้นหน้าขออนุญาต → <b>Review permissions</b> → เลือกบัญชี Google ของท่าน</li>
+    <li>ถ้าขึ้นหน้าเตือน <b>Google hasn't verified this app</b>
+      <div class="info" style="margin-top:6px">
+        กด <b>Advanced</b> → <b>Go to … (unsafe)</b> → <b>Allow</b><br>
+        คำเตือนนี้เป็นเรื่องปกติของสคริปต์ที่เขียนเอง เพราะยังไม่ได้ส่งให้ Google ตรวจสอบ
+        — ท่านเป็นผู้เขียนและเจ้าของสคริปต์เอง จึงปลอดภัย
+      </div>
+    </li>
+    <li>ดูช่อง <b>Execution log</b> ด้านล่าง ต้องขึ้นว่า <code>บันทึกการตั้งค่าเรียบร้อยแล้ว</code></li>
+  </ol>
+  <div class="ok">
+    ✅ ค่าทั้ง 4 ถูกเก็บใน <b>Script Properties</b> ซึ่งอยู่ฝั่งเซิร์ฟเวอร์ของ Google
+    ไม่ปรากฏในหน้าเว็บ และไม่ติดไปกับโค้ดที่อัปขึ้น GitHub
+  </div>
+</div>
+
+<h3><span class="stepnum">7</span>ทดสอบก่อนใช้งานจริง</h3>
+<div class="card">
+  <ol>
+    <li>ช่องเลือกฟังก์ชัน เลือก <b><code>ทดสอบการแจ้งเตือน</code></b></li>
+    <li>กด <b>▶ Run</b></li>
+    <li>ภายในไม่กี่วินาทีควรได้รับ
+      <ul>
+        <li>📱 ข้อความ LINE จาก OA ที่สร้างไว้</li>
+        <li>📧 อีเมลหัวข้อ <code>📥 คำขอซื้อยาใหม่ REQ-…-TEST</code></li>
+      </ul>
+    </li>
+    <li>ดู <b>Execution log</b> จะบอกผลแต่ละช่องทาง เช่น <code>LINE : sent</code></li>
+  </ol>
+  <div class="warn">
+    ถ้า log ขึ้น <code>LINE : http 401</code> แปลว่า token ผิด — กลับไปคัดลอกใหม่จากขั้นที่ 3<br>
+    ถ้าขึ้น <code>skipped</code> แปลว่ายังไม่ได้ใส่ค่า — กลับไปทำขั้นที่ 6 ใหม่
+  </div>
+</div>
+
+<h3><span class="stepnum">8</span>เผยแพร่เป็น Web App</h3>
+<div class="card">
+  <ol>
+    <li>มุมขวาบน กด <b>Deploy</b> → <b>New deployment</b></li>
+    <li>กดไอคอน <b>⚙️</b> ข้างคำว่า Select type → เลือก <b>Web app</b></li>
+    <li>ตั้งค่าดังนี้
+      <table style="margin-top:8px">
+        <tr><th style="width:180px">Description</th><td><code>แจ้งเตือนคำขอซื้อยา v1</code></td></tr>
+        <tr><th>Execute as</th><td><b>Me</b> (บัญชีของท่าน)</td></tr>
+        <tr><th>Who has access</th><td><b>Anyone</b></td></tr>
+      </table>
+    </li>
+    <li>กด <b>Deploy</b> → อนุญาตสิทธิ์อีกครั้งถ้าถาม</li>
+    <li><b>คัดลอก Web app URL</b> หน้าตาแบบนี้
+<pre><code>https://script.google.com/macros/s/AKfycb...ยาวมาก.../exec</code></pre>
+    </li>
+  </ol>
+  <div class="info">
+    <b>ทำไมต้องเลือก Anyone</b> — เพราะแบบฟอร์มของนักวิจัยเรียกมาโดยไม่ได้ล็อกอิน Google
+    ความปลอดภัยมาจาก <code>NOTIFY_SECRET</code> ที่ตั้งไว้ในขั้นที่ 6 ซึ่งสคริปต์ตรวจทุกครั้ง
+    ถ้ารหัสไม่ตรงจะไม่ส่งอะไรเลย
+  </div>
+  <div class="warn">
+    ทุกครั้งที่<b>แก้โค้ดในสคริปต์</b> ต้องกด <b>Deploy → Manage deployments → ✏️ แก้ไข →
+    Version: New version → Deploy</b> ด้วย ไม่งั้นระบบยังใช้โค้ดเวอร์ชันเก่า
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2><span class="part">ส่วนที่ 3</span> &nbsp;เชื่อมเข้ากับระบบ</h2>
+
+<h3><span class="stepnum">9</span>ใส่ค่าใน firebase-config.js</h3>
+<div class="card">
+  <p>เปิดไฟล์ <code>firebase-config.js</code> ด้วย Notepad เลื่อนลงล่างสุด หา 2 บรรทัดนี้</p>
+<pre><code>window.NOTIFY_WEBHOOK_URL = '';
+window.NOTIFY_SECRET = '';</code></pre>
+  <p>แก้เป็น</p>
+<pre><code>window.NOTIFY_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+window.NOTIFY_SECRET = 'lasc-med-8f3kqz91';</code></pre>
+  <div class="err">
+    ⚠ <code>NOTIFY_SECRET</code> ต้อง<b>ตรงกันเป๊ะ</b>กับที่ใส่ในขั้นที่ 6 ตัวพิมพ์เล็กใหญ่ก็ต้องตรง
+    ถ้าไม่ตรง สคริปต์จะปฏิเสธและไม่ส่งแจ้งเตือน
+  </div>
+  <div class="warn">
+    บันทึกไฟล์เป็น <b>UTF-8</b> และอย่าลืมเครื่องหมาย <code>'</code> ครอบค่า กับ <code>;</code> ท้ายบรรทัด
+  </div>
+</div>
+
+<h3><span class="stepnum">10</span>อัปโหลดและทดสอบจริง</h3>
+<div class="card">
+  <ol>
+    <li>อัปโหลด <b><code>firebase-config.js</code></b> และ <b><code>request.html</code></b>
+        ขึ้น GitHub (Add file → Upload files → Commit changes)</li>
+    <li>รอ 1–2 นาที</li>
+    <li>เปิด <code>https://kwanchanokd.github.io/psu-lasc-medicine/request.html</code>
+        แล้วกด <b>Ctrl + Shift + R</b></li>
+    <li>กรอกข้อมูลทดสอบ → กด <b>📨 ส่งคำขอ</b></li>
+    <li>ตรวจผลทั้ง 4 อย่าง
+      <ul>
+        <li>ได้รหัสอ้างอิง <code>REQ-…</code> บนหน้าจอ</li>
+        <li>📱 ได้ข้อความ LINE</li>
+        <li>📧 ได้อีเมล</li>
+        <li>คำขอโผล่ในแท็บ <b>📥 คำขอเข้าใหม่</b> ของระบบหลัก</li>
+      </ul>
+    </li>
+    <li>ลบคำขอทดสอบด้วยปุ่ม <b>✖ ตีกลับ / ลบ</b></li>
+  </ol>
+  <div class="ok">✅ ครบทั้ง 4 ข้อ = ติดตั้งสมบูรณ์</div>
+</div>
+
+<!-- ======================================================= -->
+<h2>📊 เปิดใช้การบันทึกลง Google Sheets (ไม่บังคับ)</h2>
+<div class="card">
+  <ol>
+    <li>สร้างสเปรดชีตใหม่ที่ <a href="https://sheets.new" target="_blank">sheets.new</a>
+        ตั้งชื่อเช่น <code>ทะเบียนคำขอซื้อยา</code></li>
+    <li>ดูลิงก์บนแถบที่อยู่ คัดลอกส่วนกลางที่เป็น <b>ID</b>
+<pre><code>docs.google.com/spreadsheets/d/<b>1AbC...ตรงนี้คือ ID...XyZ</b>/edit</code></pre>
+    </li>
+    <li>กลับไปที่ Apps Script → แก้ <code>SHEET_ID</code> ในฟังก์ชัน <code>ตั้งค่าครั้งแรก()</code>
+        ให้เป็น ID นั้น</li>
+    <li>กด <b>💾 Save</b> → เลือกฟังก์ชัน <code>ตั้งค่าครั้งแรก</code> → <b>▶ Run</b> อีกครั้ง</li>
+    <li>ทดสอบด้วย <code>ทดสอบการแจ้งเตือน</code> → จะมีแถวใหม่โผล่ในชีตชื่อ <b>คำขอ</b></li>
+  </ol>
+  <div class="info">
+    ระบบสร้างหัวตาราง 15 คอลัมน์ให้อัตโนมัติในครั้งแรก และเปิดไฟล์นี้ด้วย Excel ได้
+    (ไฟล์ → ดาวน์โหลด → Microsoft Excel)
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>🔧 แก้ปัญหาที่พบบ่อย</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:280px">อาการ</th><th>สาเหตุและวิธีแก้</th></tr>
+    <tr><td>ส่งคำขอได้ แต่<b>ไม่ได้รับอะไรเลย</b></td>
+        <td>ยังไม่ได้อัปโหลด <code>firebase-config.js</code> ที่แก้แล้วขึ้น GitHub
+            หรือลืมกด Ctrl+Shift+R — ลองเปิด Web app URL ด้วยเบราว์เซอร์ ต้องเห็นข้อความ
+            “✅ ตัวกลางแจ้งเตือนทำงานปกติ”</td></tr>
+    <tr><td><b>ได้อีเมล แต่ไม่ได้ LINE</b></td>
+        <td>ยังไม่ได้เพิ่ม OA เป็นเพื่อน (ขั้นที่ 4) หรือ token ผิด —
+            รัน <code>ทดสอบการแจ้งเตือน</code> แล้วดู Execution log</td></tr>
+    <tr><td><b>ได้ LINE แต่ไม่ได้อีเมล</b></td>
+        <td>ตรวจกล่องขยะ (Junk) ก่อน · ตรวจว่าสะกด <code>VET_EMAIL</code> ถูกต้อง</td></tr>
+    <tr><td>log ขึ้น <code>LINE : http 401</code></td>
+        <td>Channel access token ผิดหรือถูกยกเลิก — ออก token ใหม่ในขั้นที่ 3
+            แล้วรัน <code>ตั้งค่าครั้งแรก</code> อีกครั้ง</td></tr>
+    <tr><td>log ขึ้น <code>LINE : http 429</code></td>
+        <td>ส่งเกินโควตาข้อความรายเดือนของ LINE OA — รอเดือนถัดไป
+            หรืออัปเกรดแพ็กเกจ (ปกติไม่มีทางถึงที่ปริมาณงานระดับนี้)</td></tr>
+    <tr><td>สคริปต์ตอบ <code>unauthorized</code></td>
+        <td><code>NOTIFY_SECRET</code> สองฝั่งไม่ตรงกัน — เทียบตัวพิมพ์เล็กใหญ่ให้เหมือนกันเป๊ะ</td></tr>
+    <tr><td><b>แก้โค้ดแล้วไม่มีผล</b></td>
+        <td>ลืม Deploy เวอร์ชันใหม่ — Deploy → Manage deployments → ✏️ →
+            Version: <b>New version</b> → Deploy</td></tr>
+  </table>
+</div>
+
+<!-- ======================================================= -->
+<h2>💰 โควตาและค่าใช้จ่าย</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:230px">บริการ</th><th>โควตาฟรี</th><th>ระบบนี้ใช้จริง</th></tr>
+    <tr><td>LINE OA (แพ็กเกจฟรี)</td><td>300 ข้อความ / เดือน</td><td>ประมาณ 3 ข้อความ / เดือน</td></tr>
+    <tr><td>Apps Script — ส่งอีเมล</td><td>100 ฉบับ / วัน</td><td>ไม่ถึง 1 ฉบับ / วัน</td></tr>
+    <tr><td>Apps Script — เวลาประมวลผล</td><td>90 นาที / วัน</td><td>ไม่ถึง 1 นาที / วัน</td></tr>
+    <tr><td>Google Sheets</td><td>ไม่จำกัด</td><td>ไม่กี่แถวต่อปี</td></tr>
+  </table>
+  <div class="ok">✅ ไม่มีทางเกินโควตา และไม่ต้องผูกบัตรเครดิตใด ๆ</div>
+  <div class="info">
+    <b>หมายเหตุเรื่องผู้ส่งอีเมล</b> — Apps Script ส่งอีเมลจากบัญชี <b>Google</b> ที่เป็นเจ้าของสคริปต์
+    ไม่ใช่จาก <code>@psu.ac.th</code> (เพราะ ม.อ. ใช้ Microsoft 365 ไม่ใช่ Google Workspace)<br>
+    สำหรับ<b>อีเมลแจ้งเตือนภายใน</b>ไม่เป็นปัญหา เพราะส่งถึงตัวเองอยู่แล้ว<br>
+    ส่วน<b>อีเมลที่ส่งถึงนักวิจัย</b> เช่น ใบแจ้งค่าใช้จ่าย ยังคงใช้ปุ่มร่างอีเมลในระบบ
+    ซึ่งเปิด Outlook ของสัตวแพทย์ จึงส่งจาก <code>@psu.ac.th</code> อย่างเป็นทางการ
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>🔒 ข้อควรรู้ด้านความปลอดภัย</h2>
+<div class="card">
+  <ul>
+    <li><b>Channel access token ของ LINE</b> อยู่ใน Script Properties ฝั่ง Google เท่านั้น
+        ไม่ปรากฏในหน้าเว็บ และไม่ติดไปกับไฟล์ที่อัปขึ้น GitHub</li>
+    <li><b><code>NOTIFY_SECRET</code> ปรากฏในหน้าเว็บ</b> (เพราะอยู่ใน firebase-config.js)
+        จึงไม่ใช่ความลับระดับสูง หน้าที่ของมันคือกันการยิงข้อมูลขยะแบบสุ่มเท่านั้น
+        หากหลุดออกไป ผลเสียสูงสุดคือมีคนส่งแจ้งเตือนปลอมมารบกวน
+        <b>ไม่สามารถอ่านข้อมูลคำขอหรือส่งข้อความในนาม OA ได้</b></li>
+    <li>ถ้าถูกรบกวน ให้เปลี่ยน <code>NOTIFY_SECRET</code> ทั้งสองฝั่งเป็นค่าใหม่</li>
+    <li>ข้อมูลที่ส่งผ่านตัวกลางมีข้อมูลส่วนบุคคลของนักวิจัย (ชื่อ อีเมล โทรศัพท์
+        และเลขประจำตัวผู้เสียภาษีถ้ากรอก) — <b>ใช้บัญชี Google ของหน่วยงานหรือของผู้รับผิดชอบโดยตรง
+        ไม่ควรใช้บัญชีที่แชร์กับผู้อื่น</b></li>
+  </ul>
+</div>
+
+<!-- ======================================================= -->
+<h2>✅ รายการตรวจสอบ</h2>
+<div class="card">
+  <ul class="chk">
+    <li>สร้าง LINE Official Account แล้ว</li>
+    <li>เปิด Messaging API แล้ว</li>
+    <li>ออก Channel access token (long-lived) แล้ว</li>
+    <li><b>เพิ่ม OA เป็นเพื่อนครบทุกคนที่ต้องได้รับแจ้งเตือน</b></li>
+    <li>วางโค้ด <code>line-email-notify.gs</code> ใน Apps Script แล้ว</li>
+    <li>แก้ค่า 4 ตัวและรัน <code>ตั้งค่าครั้งแรก</code> สำเร็จแล้ว</li>
+    <li>รัน <code>ทดสอบการแจ้งเตือน</code> ได้รับทั้ง LINE และอีเมลแล้ว</li>
+    <li>Deploy เป็น Web app แบบ Execute as Me / Anyone แล้ว</li>
+    <li>ใส่ URL และ SECRET ใน <code>firebase-config.js</code> แล้ว</li>
+    <li>อัปโหลด <code>firebase-config.js</code> และ <code>request.html</code> ขึ้น GitHub แล้ว</li>
+    <li>ทดสอบส่งคำขอจริง ได้ครบทั้ง LINE อีเมล และเห็นในแท็บคำขอเข้าใหม่แล้ว</li>
+    <li>ลบคำขอทดสอบทิ้งแล้ว</li>
+  </ul>
+</div>
+
+<footer>
+  ระบบบริการยาและเวชภัณฑ์เพื่องานวิจัย · ศูนย์บริการสัตว์ทดลอง มหาวิทยาลัยสงขลานครินทร์<br>
+  ตามมาตรฐานขั้นตอนการปฏิบัติงาน SOP MED101
+</footer>
+</body>
+</html>

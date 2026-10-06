@@ -318,12 +318,12 @@ const DB_URL  = String(FIREBASE_CONFIG.databaseURL || '').replace(/\/$/, '');
 const INBOX   = DB_URL + '/' + ROOT + '/inbox';
 const CONFIG  = DB_URL + '/' + ROOT + '/public/config.json';
 
-/* Webhook สำหรับส่งอีเมลแจ้งเตือนอัตโนมัติ (n8n / Power Automate / บริการอื่น)
-   ปล่อยว่างไว้ = ไม่ส่ง ระบบยังทำงานได้ครบตามปกติ
-   เมื่อตั้ง n8n เสร็จแล้ว ให้วาง Production URL ของ Webhook node ตรงนี้
-   ตัวอย่าง: 'https://n8n.example.psu.ac.th/webhook/lasc-medicine-request'
-   หมายเหตุ: การส่ง webhook เป็นแบบ "ส่งแล้วไม่รอผล" หากปลายทางล่ม คำขอยังถูกบันทึกลง Firebase ตามปกติ */
-const WEBHOOK_URL = '';   /* ← วาง Production URL ของ n8n Webhook ตรงนี้ (ดู n8n-setup.md) */
+/* ปลายทางแจ้งเตือนอัตโนมัติ (LINE OA + อีเมล) — ตั้งค่าที่ firebase-config.js
+   ปล่อยว่าง = ไม่แจ้งเตือน ระบบยังทำงานครบตามปกติ
+   รองรับทั้ง Google Apps Script (ดู วิธีติดตั้ง-แจ้งเตือน.html) และ n8n (ดู n8n-setup.md)
+   การส่งเป็นแบบ "ส่งแล้วไม่รอผล" หากปลายทางล่ม คำขอยังถูกบันทึกลง Firebase ตามปกติ */
+const WEBHOOK_URL   = window.NOTIFY_WEBHOOK_URL || '';
+const NOTIFY_SECRET = window.NOTIFY_SECRET || '';
 
 /* ค่าตั้งต้น ใช้เมื่ออ่านค่าจากคลาวด์ไม่ได้ */
 let cfg = { leadDays: 14, payDays: 7, buyDays: 7, drugs: [] };
@@ -525,10 +525,12 @@ async function submitForm() {
 function notifyWebhook(payload) {
   if (!WEBHOOK_URL) return;
   try {
+    /* ใช้ text/plain เพื่อให้เป็น simple request ไม่ต้องผ่าน CORS preflight
+       ซึ่ง Google Apps Script ไม่รองรับ — ฝั่งปลายทางอ่านเนื้อหาเป็น JSON ได้ตามปกติ */
     fetch(WEBHOOK_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ secret: NOTIFY_SECRET }, payload)),
       keepalive: true
     }).catch(() => {});
   } catch (e) { /* ไม่ต้องแจ้งผู้ใช้ — ไม่กระทบการยื่นคำขอ */ }
